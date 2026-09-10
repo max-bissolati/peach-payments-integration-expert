@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment Result — Peach Payments</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      max-width: 600px;
+      margin: 60px auto;
+      padding: 0 20px;
+      color: #222;
+    }
+    .card {
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 24px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+    .badge-success { background: #e3fcef; color: #006644; }
+    .badge-pending { background: #fffae6; color: #974f0c; }
+    .badge-error { background: #ffebe6; color: #de350b; }
+    .details {
+      margin-top: 16px;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    a {
+      color: #0052cc;
+      text-decoration: none;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Payment Confirmation</h2>
+    <div id="loading">Verifying payment status with server...</div>
+    <div id="result" style="display: none;">
+      <div id="status-badge" class="badge"></div>
+      <div class="details">
+        <p><strong>Status:</strong> <span id="status-text"></span></p>
+        <p><strong>Result Code:</strong> <span id="code-text"></span></p>
+        <p><strong>Amount:</strong> <span id="amount-text"></span></p>
+        <p><strong>Transaction ID:</strong> <span id="tx-text"></span></p>
+        <p><strong>Order Fulfilled:</strong> <span id="fulfilled-text"></span></p>
+      </div>
+      <p style="margin-top: 24px;"><a href="/">← Return to Store</a></p>
+    </div>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const checkoutId = params.get("checkoutId") || params.get("cid");
+
+    async function checkStatus() {
+      const loadingEl = document.getElementById("loading");
+      const resultEl = document.getElementById("result");
+      const badgeEl = document.getElementById("status-badge");
+
+      if (!checkoutId) {
+        loadingEl.textContent = "Error: Missing checkoutId parameter.";
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/checkout/" + encodeURIComponent(checkoutId) + "/status");
+        if (!res.ok) {
+          throw new Error("HTTP error " + res.status);
+        }
+        const data = await res.json();
+
+        loadingEl.style.display = "none";
+        resultEl.style.display = "block";
+
+        document.getElementById("status-text").textContent = data.status;
+        document.getElementById("code-text").textContent = data.resultCode || "N/A";
+        document.getElementById("amount-text").textContent = (data.amount || "10.00") + " " + (data.currency || "ZAR");
+        document.getElementById("tx-text").textContent = data.transactionId || "Pending / N/A";
+        document.getElementById("fulfilled-text").textContent = data.fulfilled ? "Yes (Fulfillment Confirmed)" : "No";
+
+        if (data.status === "captured") {
+          badgeEl.textContent = "Payment Successful";
+          badgeEl.className = "badge badge-success";
+        } else if (data.status === "pending") {
+          badgeEl.textContent = "Payment Pending";
+          badgeEl.className = "badge badge-pending";
+        } else {
+          badgeEl.textContent = "Payment Failed / Error";
+          badgeEl.className = "badge badge-error";
+        }
+      } catch (err) {
+        loadingEl.textContent = "Failed to verify status: " + err.message;
+      }
+    }
+
+    checkStatus();
+  </script>
+</body>
+</html>

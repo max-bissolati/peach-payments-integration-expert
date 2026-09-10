@@ -1,0 +1,4 @@
+.last-llms-hash
+.DS_Store
+node_modules/
+*.log

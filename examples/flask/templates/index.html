@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Peach Payments Checkout V2 — Flask Example</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      max-width: 680px;
+      margin: 40px auto;
+      padding: 0 20px;
+      color: #222;
+    }
+    .card {
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    button {
+      background: #0052cc;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    /* Peach Checkout widget container MUST have an explicit height of at least 640px */
+    #peach-checkout-root {
+      height: 640px;
+      min-height: 640px;
+      margin-top: 20px;
+    }
+    .status-msg {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 6px;
+      display: none;
+    }
+    .status-info { background: #e8f4fd; color: #0052cc; }
+    .status-err { background: #ffebe6; color: #de350b; }
+    .badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+    .badge-success { background: #e3fcef; color: #006644; }
+    .badge-pending { background: #fffae6; color: #974f0c; }
+    .badge-error { background: #ffebe6; color: #de350b; }
+    .details {
+      margin-top: 16px;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+  </style>
+  <!-- Load Peach Checkout V2 Embedded SDK before initiate() is called -->
+  <script src="https://sandbox-checkout.peachpayments.com/js/checkout.js"></script>
+</head>
+<body>
+  <h1>Order Checkout</h1>
+
+  <div class="card">
+    <h3>Product: Integration Reference Guide</h3>
+    <p>Amount: <strong>R10.00</strong> (Major-unit decimal string: "10.00")</p>
+    <p>Payment Method: Card (Sandbox)</p>
+    <button id="pay-button" onclick="startCheckout()">Pay R10.00 Now</button>
+    <div id="status-box" class="status-msg"></div>
+  </div>
+
+  <div id="result-card" class="card" style="display: none;">
+    <h2>Payment Confirmation</h2>
+    <div id="status-badge" class="badge"></div>
+    <div class="details">
+      <p><strong>Status:</strong> <span id="status-text"></span></p>
+      <p><strong>Result Code:</strong> <span id="code-text"></span></p>
+      <p><strong>Amount:</strong> <span id="amount-text"></span></p>
+      <p><strong>Transaction ID:</strong> <span id="tx-text"></span></p>
+      <p><strong>Order Fulfilled:</strong> <span id="fulfilled-text"></span></p>
+    </div>
+    <p style="margin-top: 20px;"><button onclick="resetView()">Start New Payment</button></p>
+  </div>
+
+  <!-- The embedded checkout container -->
+  <div id="peach-checkout-root"></div>
+
+  <script>
+    const statusBox = document.getElementById("status-box");
+    const payBtn = document.getElementById("pay-button");
+    const resultCard = document.getElementById("result-card");
+    const checkoutRoot = document.getElementById("peach-checkout-root");
+
+    function showStatus(msg, isError) {
+      statusBox.textContent = msg;
+      statusBox.className = "status-msg " + (isError ? "status-err" : "status-info");
+      statusBox.style.display = "block";
+    }
+
+    function resetView() {
+      resultCard.style.display = "none";
+      checkoutRoot.innerHTML = "";
+      statusBox.style.display = "none";
+      payBtn.disabled = false;
+    }
+
+    async function checkStatus(checkoutId) {
+      showStatus("Verifying payment status with server...", false);
+      try {
+        const res = await fetch("/api/checkout/" + encodeURIComponent(checkoutId) + "/status");
+        if (!res.ok) {
+          throw new Error("HTTP error " + res.status);
+        }
+        const data = await res.json();
+
+        statusBox.style.display = "none";
+        resultCard.style.display = "block";
+        checkoutRoot.innerHTML = "";
+
+        const badgeEl = document.getElementById("status-badge");
+        document.getElementById("status-text").textContent = data.status;
+        document.getElementById("code-text").textContent = data.resultCode || "N/A";
+        document.getElementById("amount-text").textContent = (data.amount || "10.00") + " " + (data.currency || "ZAR");
+        document.getElementById("tx-text").textContent = data.transactionId || "Pending / N/A";
+        document.getElementById("fulfilled-text").textContent = data.fulfilled ? "Yes (Fulfillment Confirmed)" : "No";
+
+        if (data.status === "captured") {
+          badgeEl.textContent = "Payment Successful";
+          badgeEl.className = "badge badge-success";
+        } else if (data.status === "pending") {
+          badgeEl.textContent = "Payment Pending";
+          badgeEl.className = "badge badge-pending";
+        } else {
+          badgeEl.textContent = "Payment Failed / Error";
+          badgeEl.className = "badge badge-error";
+        }
+      } catch (err) {
+        showStatus("Failed to verify status: " + err.message, true);
+        payBtn.disabled = false;
+      }
+    }
+
+    async function startCheckout() {
+      payBtn.disabled = true;
+      resultCard.style.display = "none";
+      showStatus("Initiating checkout session with server...", false);
+
+      try {
+        // 1. Request checkoutId and entityId from our server
+        const res = await fetch("/api/checkout", { method: "POST" });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || "Failed to create checkout");
+        }
+
+        const data = await res.json();
+        const checkoutId = data.checkoutId;
+        const entityId = data.entityId;
+
+        showStatus("Rendering Peach Payments widget...", false);
+
+        // 2. Initialize Checkout V2 Embedded Widget
+        // Pass semi-public entityId as key, and checkoutId from server.
+        const checkout = Checkout.initiate({
+          key: entityId,
+          checkoutId: checkoutId,
+          eventHandlers: {
+            onCompleted: function(event) {
+              console.log("Peach onCompleted event:", event);
+              // Suppress default redirect, verify outcome directly
+              checkStatus(event.checkoutId || checkoutId);
+            },
+            onCancelled: function() {
+              console.log("Peach onCancelled event");
+              showStatus("Payment was cancelled by the user. You can try again.", true);
+              payBtn.disabled = false;
+            },
+            onExpired: function() {
+              console.log("Peach onExpired event");
+              // 30-minute session TTL expired; checkoutId cannot be reused. Must re-initiate.
+              showStatus("Checkout session expired. Please click Pay to restart.", true);
+              payBtn.disabled = false;
+            },
+            onError: function(event) {
+              console.error("Peach onError event:", event);
+              showStatus("An error occurred during payment processing.", true);
+              payBtn.disabled = false;
+            }
+          }
+        });
+
+        // 3. Render widget to container (returns void — do NOT await)
+        checkout.render("#peach-checkout-root");
+
+      } catch (err) {
+        console.error("Checkout initiation failed:", err);
+        showStatus("Error: " + err.message, true);
+        payBtn.disabled = false;
+      }
+    }
+
+    // If redirected with ?checkoutId=...
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialCheckoutId = urlParams.get("checkoutId") || urlParams.get("cid");
+    if (initialCheckoutId) {
+      checkStatus(initialCheckoutId);
+    }
+  </script>
+</body>
+</html>

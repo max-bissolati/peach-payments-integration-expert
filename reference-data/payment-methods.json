@@ -1,0 +1,348 @@
+{
+  "_note": "Method availability is entity-dependent (check GET /v2/channels/{entityId}/payment-methods).",
+  "_source": "references/methods-catalog.md",
+  "methods": [
+    {
+      "name": "Cards (Visa, Mastercard, American Express, Diners Club)",
+      "code": "CARD",
+      "surfaces": [
+        "Checkout",
+        "Links",
+        "POS"
+      ],
+      "refundable": "full",
+      "recurring": true,
+      "currencies": [
+        "ZAR",
+        "KES",
+        "MUR",
+        "USD",
+        "GBP",
+        "EUR"
+      ]
+    },
+    {
+      "name": "PayShap",
+      "code": "PAYSHAP",
+      "surfaces": [
+        "PaymentsAPI"
+      ],
+      "refundable": "partial",
+      "recurring": false,
+      "currencies": [
+        "ZAR"
+      ]
+    },
+    {
+      "name": "Pay by Bank",
+      "code": "PAYBYBANK",
+      "surfaces": [
+        "Checkout"
+      ],
+      "refundable": "none",
+      "recurring": false,
+      "currencies": [
+        "ZAR"
+      ]
+    },
+    {
+      "name": "Capitec Pay",
+      "code": "CAPITECPAY",
+      "surfaces": [
+        "Checkout",
+        "PaymentsAPI",
+        "Links",
+        "POS"
+      ],
+      "refundable": "none",
+      "recurring": false,
+      "currencies": [
+        "ZAR"
+      ]
+    },
+    {
+      "name": "Peach EFT",
+      "code": "PEACHEFT",
+      "surfaces": [
+        "PaymentsAPI"
+      ],
+      "refundable": "none",
+      "recurring": false,
+      "currencies": [
+        "ZAR"
+      ]
+    },
+    {
+      "name": "Absa Pay",
+      "code": "ABSAEFT",
+      "surfaces": [
+        "Checkout",
+        "PaymentsAPI"
+      ],
+      "refundable": "none",
+      "recurring": false,
+      "currencies": [
+        "ZAR"
+      ]
+    },
+    {
+      "name": "Payflex",
+      "code": "PAYFLEX",
+      "surfaces": [
+        "Checkout",
+        "PaymentsAPI",
+        "Links"
+      ],
+      "refundable": "full",
+      "recurring": false,
+      "currencies": [
+        "ZAR"
+      ]
+    },
+    {
+      "name": "ZeroPay",
+      "code": "ZEROPAY",
+      "surfaces": [
+        "Checkout",
+        "PaymentsAPI",
+        "Links"
+      ],
+      "refundable": "none",
+      "recurring": false,
+      "currencies": [
+        "ZAR"
+      ]
+    },
+    {
+      "name": "Float",
+      "code": "FLOAT",
+      "surfaces": [
+        "Checkout",
+        "PaymentsAPI",
+        "Links"
+      ],
+      "refundable": "full",
+      "recurring": false,
+      "currencies": [
+        "ZAR"
+      ]
+    },
+    {
+      "name": "Happy Pay",
+      "code": "HAPPYPAY",
+      "surfaces": [
+        "Checkout",
+        "PaymentsAPI",
+        "Links"
+      ],
+      "refundable": "full",
+      "recurring": false,
+      "currencies": [
+        "ZAR"
+      ]
+    },
+    {
+      "name": "PayJustNow",
+      "code": "PAYJUSTNOW",
+      "surfaces": [
+        "POS"
+      ],
+      "refundable": "none",
+      "recurring": false,
+      "currencies": [
+        "ZAR"
+      ]
+    },
+    {
+      "name": "Scan to Pay (Masterpass)",
+      "code": "MASTERPASS",
+      "surfaces": [
+        "Checkout",
+        "PaymentsAPI",
+        "Links"
+      ],
+      "refundable": "full-only",
+      "recurring": false,
+      "currencies": [
+        "ZAR"
+      ]
+    },
+    {
+      "name": "Apple Pay",
+      "code": "APPLE PAY",
+      "surfaces": [
+        "Checkout"
+      ],
+      "refundable": "full",
+      "recurring": true,
+      "currencies": [
+        "ZAR",
+        "MUR"
+      ]
+    },
+    {
+      "name": "Google Pay",
+      "code": "GOOGLEPAY",
+      "surfaces": [
+        "Checkout"
+      ],
+      "refundable": "full",
+      "recurring": true,
+      "currencies": [
+        "ZAR"
+      ]
+    },
+    {
+      "name": "Samsung Pay",
+      "code": "SAMSUNGPAY",
+      "surfaces": [
+        "Checkout"
+      ],
+      "refundable": "full",
+      "recurring": true,
+      "currencies": [
+        "ZAR"
+      ]
+    },
+    {
+      "name": "PayPal",
+      "code": "PAYPAL",
+      "surfaces": [
+        "Checkout",
+        "Links",
+        "POS"
+      ],
+      "refundable": "full",
+      "recurring": false,
+      "currencies": [
+        "USD",
+        "GBP",
+        "EUR"
+      ]
+    },
+    {
+      "name": "1Voucher",
+      "code": "1FORYOU",
+      "surfaces": [
+        "Checkout",
+        "PaymentsAPI",
+        "Links"
+      ],
+      "refundable": "full",
+      "recurring": false,
+      "currencies": [
+        "ZAR"
+      ]
+    },
+    {
+      "name": "Mobicred",
+      "code": "MOBICRED",
+      "surfaces": [
+        "Checkout",
+        "PaymentsAPI",
+        "Links"
+      ],
+      "refundable": "full",
+      "recurring": false,
+      "currencies": [
+        "ZAR"
+      ]
+    },
+    {
+      "name": "RCS",
+      "code": "RCS",
+      "surfaces": [
+        "Checkout",
+        "PaymentsAPI",
+        "Links"
+      ],
+      "refundable": "full",
+      "recurring": false,
+      "currencies": [
+        "ZAR"
+      ]
+    },
+    {
+      "name": "A+ (Aplus)",
+      "code": "APLUS",
+      "surfaces": [
+        "Checkout",
+        "Links"
+      ],
+      "refundable": "none",
+      "recurring": false,
+      "currencies": [
+        "ZAR"
+      ]
+    },
+    {
+      "name": "MoneyBadger",
+      "code": "MONEYBADGER",
+      "surfaces": [
+        "Checkout",
+        "PaymentsAPI"
+      ],
+      "refundable": "full",
+      "recurring": false,
+      "currencies": [
+        "ZAR"
+      ]
+    },
+    {
+      "name": "M-PESA",
+      "code": "MPESA",
+      "surfaces": [
+        "Checkout",
+        "PaymentsAPI",
+        "Links"
+      ],
+      "refundable": "none",
+      "recurring": false,
+      "currencies": [
+        "KES"
+      ]
+    },
+    {
+      "name": "blink by Emtel",
+      "code": "BLINKBYEMTEL",
+      "surfaces": [
+        "Checkout",
+        "PaymentsAPI",
+        "Links"
+      ],
+      "refundable": "none",
+      "recurring": false,
+      "currencies": [
+        "MUR"
+      ]
+    },
+    {
+      "name": "MCB Juice",
+      "code": "MCBJUICE",
+      "surfaces": [
+        "Checkout",
+        "PaymentsAPI",
+        "Links"
+      ],
+      "refundable": "none",
+      "recurring": false,
+      "currencies": [
+        "MUR"
+      ]
+    },
+    {
+      "name": "MauCAS",
+      "code": "MAUCAS",
+      "surfaces": [
+        "Checkout",
+        "PaymentsAPI",
+        "POS"
+      ],
+      "refundable": "none",
+      "recurring": false,
+      "currencies": [
+        "MUR"
+      ]
+    }
+  ]
+}

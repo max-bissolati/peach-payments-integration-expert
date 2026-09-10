@@ -1,0 +1,42 @@
+{
+  "products": {
+    "auth": {
+      "sandbox": "https://sandbox-dashboard.peachpayments.com",
+      "live": "https://dashboard.peachpayments.com"
+    },
+    "checkout": {
+      "sandbox": "https://testsecure.peachpayments.com",
+      "live": "https://secure.peachpayments.com"
+    },
+    "card": {
+      "sandbox": "https://sandbox-card.peachpayments.com/v1",
+      "live": "https://card.peachpayments.com/v1"
+    },
+    "payouts": {
+      "sandbox": "https://sandbox-payouts.peachpayments.com",
+      "live": "https://payouts.peachpayments.com"
+    },
+    "reconciliation": {
+      "sandbox": "https://sandbox-reconciliation.ppay.io",
+      "live": "https://reconciliation.peachpayments.com"
+    },
+    "paymentsApi": {
+      "sandbox": "https://testapi-v2.peachpayments.com",
+      "live": "https://api-v2.peachpayments.com"
+    },
+    "paymentLinks": {
+      "sandbox": "https://sandbox-l.ppay.io",
+      "live": "https://links.peachpayments.com"
+    },
+    "refund": {
+      "sandbox": "https://testapi.peachpayments.com",
+      "live": "https://api.peachpayments.com"
+    },
+    "embeddedSdk": {
+      "sandbox": "https://sandbox-checkout.peachpayments.com/js/checkout.js",
+      "live": "https://checkout.peachpayments.com/js/checkout.js"
+    }
+  },
+  "resultCodesEndpoint": "https://sandbox-card.peachpayments.com/v1/resultcodes",
+  "_source": "testing-and-go-live.md §6, checkout-v2.md, payouts.md, reconciliation.md"
+}

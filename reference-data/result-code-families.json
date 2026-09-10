@@ -1,0 +1,62 @@
+[
+  {
+    "family": "success",
+    "regex": "^(000\\.000\\.|000\\.100\\.1|000\\.[36])",
+    "bucket": "captured",
+    "meaning": "Successful transaction (approved / successfully processed / settled manual review) — captured/authorised; fulfil after /status + amount check"
+  },
+  {
+    "family": "review",
+    "regex": "^(000\\.400\\.0[0-24-9]|000\\.400\\.100|000\\.400\\.1[12]0)",
+    "bucket": "review",
+    "meaning": "Successful transaction flagged for review — money moved; review (fraud/AVS/CVV suspicion) before fulfilment"
+  },
+  {
+    "family": "pending_short_term",
+    "regex": "^(000\\.200)",
+    "bucket": "pending",
+    "meaning": "Pending short-term — session open; ~30 min then timeout; 000.200.000 pending, 000.200.100 created, 000.200.201 QR/link opened"
+  },
+  {
+    "family": "pending_delayed",
+    "regex": "^(800\\.400\\.5|100\\.400\\.500)",
+    "bucket": "pending",
+    "meaning": "Pending delayed finalisation — non-instant methods (debit orders, async EFT); can take days — do NOT retry"
+  },
+  {
+    "family": "soft_decline",
+    "regex": "^(300\\.100\\.100|900\\.100\\.[34])",
+    "bucket": "requires_more",
+    "meaning": "Requires shopper action — SCA soft-decline (300.100.100) or timeout (900.100.3xx/4xx); retry through 3DS or challengeIndicator=04"
+  },
+  {
+    "family": "canceled",
+    "regex": "^(100\\.396\\.101|100\\.396\\.104)",
+    "bucket": "canceled",
+    "meaning": "Cancelled by shopper / uncertain — map to canceled so late out-of-order webhooks never downgrade a confirmed order"
+  },
+  {
+    "family": "chargebacks",
+    "regex": "^000\\.100\\.2",
+    "bucket": "error",
+    "meaning": "Chargeback / reversal family (000.100.200–000.100.234 + 000.100.299) — dispute/reversal, NOT a successful capture; fail closed to error"
+  },
+  {
+    "family": "3ds_step",
+    "regex": "^000\\.400\\.10[12]",
+    "bucket": "error",
+    "meaning": "Intermediate 3DS-step codes (000.400.101 card not participating / 000.400.102 user not enrolled), NOT success — the debit's own terminal code decides"
+  },
+  {
+    "family": "3ds_authentication_rejected",
+    "regex": "^(100\\.390\\.1)",
+    "bucket": "error",
+    "meaning": "3-D Secure authentication-step rejections (100.390.100–124; PARes/enrolment/challenge/fraud); decline, never success — shopper should retry or use another method"
+  },
+  {
+    "family": "communication_error",
+    "regex": "^000\\.400\\.03",
+    "bucket": "error",
+    "meaning": "Communication error band (000.400.03x) — network or timeout issue, often retryable"
+  }
+]

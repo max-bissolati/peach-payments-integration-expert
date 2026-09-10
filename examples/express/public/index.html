@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Peach Payments Checkout V2 — Express Example</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      max-width: 680px;
+      margin: 40px auto;
+      padding: 0 20px;
+      color: #222;
+    }
+    .card {
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    button {
+      background: #0052cc;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    /* Peach Checkout widget container MUST have an explicit height of at least 640px */
+    #peach-checkout-root {
+      height: 640px;
+      min-height: 640px;
+      margin-top: 20px;
+    }
+    .status-msg {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 6px;
+      display: none;
+    }
+    .status-info { background: #e8f4fd; color: #0052cc; }
+    .status-err { background: #ffebe6; color: #de350b; }
+  </style>
+  <!-- Load Peach Checkout V2 Embedded SDK before initiate() is called -->
+  <script src="https://sandbox-checkout.peachpayments.com/js/checkout.js"></script>
+</head>
+<body>
+  <h1>Order Checkout</h1>
+
+  <div class="card">
+    <h3>Product: Integration Reference Guide</h3>
+    <p>Amount: <strong>R10.00</strong> (Major-unit decimal string: "10.00")</p>
+    <p>Payment Method: Card (Sandbox)</p>
+    <button id="pay-button" onclick="startCheckout()">Pay R10.00 Now</button>
+    <div id="status-box" class="status-msg"></div>
+  </div>
+
+  <!-- The embedded checkout container -->
+  <div id="peach-checkout-root"></div>
+
+  <script>
+    const statusBox = document.getElementById("status-box");
+    const payBtn = document.getElementById("pay-button");
+
+    function showStatus(msg, isError) {
+      statusBox.textContent = msg;
+      statusBox.className = "status-msg " + (isError ? "status-err" : "status-info");
+      statusBox.style.display = "block";
+    }
+
+    async function startCheckout() {
+      payBtn.disabled = true;
+      showStatus("Initiating checkout session with server...", false);
+
+      try {
+        // 1. Request checkoutId and entityId from our server
+        const res = await fetch("/api/checkout", { method: "POST" });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error || "Failed to create checkout");
+        }
+
+        const data = await res.json();
+        const checkoutId = data.checkoutId;
+        const entityId = data.entityId;
+
+        showStatus("Rendering Peach Payments widget...", false);
+
+        // 2. Initialize Checkout V2 Embedded Widget
+        // Pass semi-public entityId as key, and checkoutId from server.
+        const checkout = Checkout.initiate({
+          key: entityId,
+          checkoutId: checkoutId,
+          eventHandlers: {
+            onCompleted: function(event) {
+              console.log("Peach onCompleted event:", event);
+              // SUPPRESS default redirect by providing handler, navigate to our result confirmation
+              window.location.href = "/result.html?checkoutId=" + encodeURIComponent(event.checkoutId);
+            },
+            onCancelled: function() {
+              console.log("Peach onCancelled event");
+              showStatus("Payment was cancelled by the user. You can try again.", true);
+              payBtn.disabled = false;
+            },
+            onExpired: function() {
+              console.log("Peach onExpired event");
+              // 30-minute session TTL expired; checkoutId cannot be reused. Must re-initiate.
+              showStatus("Checkout session expired. Please click Pay to restart.", true);
+              payBtn.disabled = false;
+            },
+            onError: function(event) {
+              console.error("Peach onError event:", event);
+              showStatus("An error occurred during payment processing.", true);
+              payBtn.disabled = false;
+            }
+          }
+        });
+
+        // 3. Render widget to container (returns void — do NOT await)
+        checkout.render("#peach-checkout-root");
+
+      } catch (err) {
+        console.error("Checkout initiation failed:", err);
+        showStatus("Error: " + err.message, true);
+        payBtn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>
