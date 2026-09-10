@@ -11,8 +11,6 @@
 <img src="https://img.shields.io/badge/PSP-Peach%20Payments-ff6f00?style=flat-square" alt="Peach Payments" />
 </p>
 
-<img src="https://readme-typing-svg.demolab.com/?font=IBM+Plex+Mono&size=18&duration=3800&pause=900&color=6E7681&center=true&vCenter=true&width=660&height=46&lines=A%20webhook%20is%20a%20wake-up%20call%2C%20not%20truth;Branch%20on%20result.code%2C%20never%20HTTP%20status;Never%20fire%20a%20live%20transaction%20from%20a%20test" alt="A webhook is a wake-up call, not truth; branch on result.code, never HTTP status; never fire a live transaction from a test" />
-
 </div>
 
 An **agent skill** that lets any SKILL.md-compatible coding agent (Claude Code, Cursor, and similar)
