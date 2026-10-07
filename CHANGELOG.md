@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased, 2026-10-07
+
+- Added `AGENTS.md` with maintenance, source review, product-boundary, verification and release
+  guidance drawn from the v0.8.0 work and publication corrections.
+
 ## 2026-10-07, v0.8.0 publication correction
 
 - Restored the custom README banner, status badges and collapsible freshness section while keeping

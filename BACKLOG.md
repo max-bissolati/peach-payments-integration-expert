@@ -2,6 +2,9 @@
 
 ## What's next
 
+Read `AGENTS.md` before the next maintenance pass and keep its operational guidance aligned with
+the scripts and release workflow as they evolve.
+
 For each future version bump, publish the matching GitHub release and inspect the rendered README
 so release metadata and visual presentation stay aligned (`README.md`, `VERSION`).
 
