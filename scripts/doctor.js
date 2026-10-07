@@ -12,7 +12,7 @@
  *       knows exactly how to build and verify a Peach Payments integration.
  *
  * RUNTIME:
- *   Node >= 18, zero external dependencies (Node built-in modules fs, path, child_process only).
+ *   Node >= 18 plus Python 3 for offline freshness validation; standard libraries only.
  *   No network calls.
  *
  * CLI:
@@ -38,39 +38,44 @@ const SKILL_ROOT = path.resolve(__dirname, '..');
 
 const TOOL_DEFINITIONS = [
   {
+    path: 'scripts/refresh-docs-check.sh',
+    name: 'refresh-docs-check',
+    desc: 'Read-only index drift check; --deep checks tracked bodies including POS (Python 3 + curl)',
+  },
+  {
     path: 'scripts/check-integration.js',
     name: 'check-integration',
-    desc: 'Static linter that catches common Peach footguns (raw-body destruction, decimal amounts, dot-keys, client-exposed secrets)',
+    desc: 'Classic Checkout-focused static linter that catches common footguns; not a POS or Orchestration security gate (raw-body destruction, decimal amounts, dot-keys, client-exposed secrets)',
   },
   {
     path: 'scripts/preflight.js',
     name: 'preflight',
-    desc: 'Static go-live readiness checker verifying env vars and code patterns (exit 0/1 gate without network)',
+    desc: 'Static go-live readiness checker for documented product profiles; no POS profile (no network)',
   },
   {
     path: 'scripts/smoke-test.js',
     name: 'smoke-test',
-    desc: 'Zero-dependency sandbox connectivity & OAuth validation tool (strictly no money movement, host allowlist)',
+    desc: 'Sandbox connectivity and OAuth validation for supported profiles; no POS profile (no money movement)',
   },
   {
     path: 'scripts/webhook-sample.js',
     name: 'webhook-sample',
-    desc: 'Generates validly signed Scheme A & Scheme B test webhook payloads for local testing (--tamper flag supported)',
+    desc: 'Generates classic Checkout Scheme A & Scheme B test webhook payloads for local testing (--tamper flag supported)',
   },
   {
     path: 'scripts/verify-webhook.js',
     name: 'verify-webhook',
-    desc: 'Verifies webhook signatures (Scheme A body signature & Scheme B header signature, timing-safe)',
+    desc: 'Verifies classic Checkout webhook signatures (Scheme A/B); not POS webhook authentication or Orchestration SHA-512',
   },
   {
     path: 'scripts/map-result-code.js',
     name: 'map-result-code',
-    desc: 'Classifies result codes into fail-closed buckets (captured, review, pending, requires_more, canceled, error)',
+    desc: 'Classifies classic dotted result codes into fail-closed buckets (captured, review, pending, requires_more, canceled, error)',
   },
   {
     path: 'scripts/decode-result.js',
     name: 'decode-result',
-    desc: 'Human-facing result code explainer with category grouping and MerchantAdviceCode dunning guidance',
+    desc: 'Classic dotted result code explainer with category grouping and MerchantAdviceCode dunning guidance',
   },
   {
     path: 'scripts/canonical-string.js',
@@ -85,7 +90,7 @@ const TOOL_DEFINITIONS = [
   {
     path: 'examples',
     name: 'examples/',
-    desc: 'Production-tested reference integrations ({examples})',
+    desc: 'Classic Checkout V2 reference integrations ({examples}); use only for that product',
   },
   {
     path: 'templates/env.example',
@@ -144,7 +149,7 @@ function extractPassLine(stdout) {
  */
 function parseCheckIntegrationOutput(stdout, exitCode) {
   if (stdout && stdout.includes('no Peach integration footguns found')) {
-    return { fails: 0, warns: 0, ok: true };
+    return { fails: exitCode === 0 ? 0 : 1, warns: 0, ok: exitCode === 0 };
   }
   const match = (stdout || '').match(/(\d+)\s+FAIL,\s*(\d+)\s+WARN/i);
   if (match) {
@@ -308,27 +313,27 @@ function getGoldenPath(skillRoot) {
     {
       step: 1,
       title: 'Run discovery (references/discovery.md)',
-      desc: "Calibrate to the user's level (plain-language mode for non-technical users vs terse technical mode for experienced devs). Determine platform, collection type (one-off / recurring / invoices / payouts), country & currency (ZAR/KES/MUR), payment methods, and UX constraints (embedded vs hosted).",
+      desc: "Calibrate to the user's level (plain-language mode for non-technical users vs terse technical mode for experienced devs). Determine platform, collection type (one-off / recurring / invoices / payouts), country and currency, payment methods, and UX constraints (online checkout, separate terminal, or app on the terminal).",
     },
     {
       step: 2,
       title: 'Pick the approach',
-      desc: `Plugin-first: use official extension if platform is supported (WooCommerce, Shopify, Magento, Wix, Ecwid, etc. per references/plugins/_matrix.md). For custom builds, adapt a reference from ${examplesList}.`,
+      desc: `Plugin-first: use official extension if platform is supported (WooCommerce, Shopify, Magento, Wix, Ecwid, etc. per references/plugins/_matrix.md). For new custom online builds, use Orchestration references. For POS, read references/pos-integrations.md and references/pos-expo-sunmi.md. ${examplesList} covers classic Checkout V2 only.`,
     },
     {
       step: 3,
-      title: 'Build server-side',
-      desc: `OAuth token acquisition with caching per expires_in, checkout creation via POST /v2/checkout (amounts as decimal strings in major units, e.g. "150.00"), status confirmation via GET /v2/checkout/{id}/status using flat dotted keys (obj["result.code"]), raw-body webhook signature verification before fulfilment (Scheme A classic form-urlencoded or Scheme B headers), fail-closed result code mapping, and idempotent money-POSTs${retryRef}.`,
+      title: 'Build for the selected product',
+      desc: `Use the selected product contract: Orchestration PaymentIntent/client_secret and integer minor units; POS REST uses a server-held merchant key and integer cents; POS Intent uses Android handoff and integer cents. For classic Checkout V2, use OAuth, POST /v2/checkout and result.code. Verify each product's webhook scheme and correlate amount, currency, order and attempt before fulfilment. Classic retry helper${retryRef} must not be copied as a POS retry policy.`,
     },
     {
       step: 4,
       title: 'VERIFY before shipping',
-      desc: 'Run verification suite: `node scripts/check-integration.js <your code>`, `node scripts/preflight.js <dir> --env .env`, `node scripts/smoke-test.js --env .env` (sandbox), and decode any result code with `node scripts/decode-result.js <code>`.',
+      desc: 'Choose checks matching the product. Existing linter, preflight and smoke tools have limited documented profiles and do not validate POS. Classic result-code tools apply only to dotted codes. For POS, test timeout recovery, duplicate submissions and conflicting events; run the mock app, then physical UAT. For Orchestration, validate its native status and HMAC-SHA512 contracts.',
     },
     {
       step: 5,
       title: 'Go-live (references/testing-and-go-live.md, references/playbooks/go-live.md)',
-      desc: 'Swap credentials and hosts from sandbox to live (flip PEACH_ENV and host URLs). Verify no secrets or OAuth token calls in client-side code, and follow write-confirmation safety gates for any money movement.',
+      desc: 'Complete the product-specific checklist before any authorized live credential/host change or terminal rollout. Verify no secrets or OAuth token calls in client-side code, and follow write-confirmation safety gates for any money movement.',
     },
   ];
 }
@@ -387,6 +392,7 @@ function runHealthChecks(skillRoot) {
     'scripts/decode-result.js',
     'scripts/preflight.js',
     'scripts/smoke-test.js',
+    'scripts/doctor.js',
   ];
 
   for (const scriptRel of SELFTEST_SCRIPTS) {
@@ -409,6 +415,32 @@ function runHealthChecks(skillRoot) {
       issues.push(`Selftest failed for ${scriptRel} (exit code ${res.status})`);
       reports.push({ pass: false, msg: `FAIL  ${scriptRel} selftest (exit ${res.status})` });
     }
+  }
+
+  // Validate the shipped manifest as well as synthetic regression fixtures. Never fetch here.
+  const baselineCheck = child_process.spawnSync('python3', ['scripts/refresh-docs-check.py', '--validate-baseline'], {
+    cwd: skillRoot,
+    encoding: 'utf8',
+    timeout: 10000,
+  });
+  if (baselineCheck.status === 0) {
+    reports.push({ pass: true, msg: `PASS  documentation baseline (${baselineCheck.stdout.trim()})` });
+  } else {
+    issues.push('Documentation baseline invalid or Python 3 unavailable');
+    reports.push({ pass: false, msg: `FAIL  documentation baseline (${baselineCheck.error?.message || baselineCheck.stdout?.trim() || baselineCheck.stderr?.trim() || 'validation failed'})` });
+  }
+
+  // Offline regression checks for documentation freshness. Never fetch here.
+  const freshnessTests = child_process.spawnSync('python3', ['scripts/test-refresh-docs-check.py'], {
+    cwd: skillRoot,
+    encoding: 'utf8',
+    timeout: 10000,
+  });
+  if (freshnessTests.status === 0) {
+    reports.push({ pass: true, msg: 'PASS  documentation freshness offline regression tests' });
+  } else {
+    issues.push('Documentation freshness tests failed or Python 3 unavailable');
+    reports.push({ pass: false, msg: `FAIL  documentation freshness tests (${freshnessTests.error?.message || freshnessTests.stderr.trim()})` });
   }
 
   // Check 2: Examples lint clean
@@ -527,6 +559,15 @@ function runSelftest() {
     const res = parseCheckIntegrationOutput('\n0 FAIL, 3 WARN\n', 0);
     if (!res.ok || res.fails !== 0 || res.warns !== 3) {
       throw new Error('warnings with 0 FAIL should have ok=true, warns=3');
+    }
+  });
+
+  t('parseCheckIntegrationOutput never lets success text override process failure', () => {
+    for (const exitCode of [1, 2, null]) {
+      const res = parseCheckIntegrationOutput('no Peach integration footguns found', exitCode);
+      if (res.ok || res.fails < 1) {
+        throw new Error(`failed process must fail lint health check (exit ${exitCode})`);
+      }
     }
   });
 

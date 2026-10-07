@@ -1,5 +1,14 @@
 # Products and Routing
 
+
+**Routing update, verified 2026-10-07:** Peach now recommends Orchestration for new custom online
+integrations. Existing classic Checkout/Payments API integrations remain documented; do not relabel
+that guidance as an announced shutdown or force a migration during unrelated maintenance.
+Read `sdk-web.md` and `orchestration-api.md` for new builds. Sources:
+[product portfolio](https://developer.peachpayments.com/docs/product-portfolio-overview),
+[Checkout overview](https://developer.peachpayments.com/docs/checkout-overview),
+[Payments API overview](https://developer.peachpayments.com/docs/payments-api-overview).
+
 ## When to load
 Load for any "which Peach product/approach" question, and BEFORE any custom build is started or proposed. Route here first whenever the user names a product ambiguity (Checkout vs Payments API vs Payment Links).
 
@@ -7,15 +16,16 @@ Load for any "which Peach product/approach" question, and BEFORE any custom buil
 
 | Product | What it is | When to choose |
 |---|---|---|
-| **Checkout** (Embedded / Hosted) | Ready-made payment form, embedded on-site or full-page redirect; cards + African methods; handles 3DS automatically | Default for web payments. Embedded = on-site experience; Hosted = more methods, redirect OK |
+| **Orchestration** | PaymentIntent-based Embedded/Hosted Checkout, server API, online mobile SDKs | Recommended for new custom online builds; `sdk-web.md`, `orchestration-api.md`, `mobile.md` |
+| **Classic Checkout** (Embedded / Hosted) | Ready-made payment form, embedded on-site or full-page redirect; cards + African methods; handles 3DS automatically | Existing Checkout integrations; new custom online builds use Orchestration |
 | **Embedded Express** (part of Checkout) | `Checkout.express` wallet-buttons-only surface (Apple/Google/Samsung Pay) | Wallets on product/cart pages; no customisations, no tokenisation |
 | **Payment Links** | Hosted links via Dashboard or API; deliver by email/SMS/WhatsApp; bulk CSV ≤1000 | No store, invoices, one-off collections; recurring invoices via Xero |
-| **Payments API** (v2) | Server-to-server, custom flow, **no (bank) card payments** (RCS store-card exception); non-card methods incl. PayShap, M-PESA, Peach EFT | Full UI control for non-card methods; you render OTP/waiting screens |
+| **Classic Payments API** (v2) | Server-to-server, custom flow, **no (bank) card payments** (RCS store-card exception); non-card methods incl. PayShap, M-PESA, Peach EFT | Existing integrations; new custom flows use Orchestration Server-to-Server |
 | **Payment Page** | Reusable hosted page (share via social/WhatsApp/QR); Embedded Checkout internally, default currency only | Reusable public pay-me page; donations; no per-invoice API work |
 | **Payment extensions** | Pre-built plugins: WooCommerce, Shopify, Magento, Wix, Ecwid, nopCommerce, OpenCart, Gravity Forms, Xero (+ Take App) | Platform in the list → install beats build. See `plugins/_matrix.md` |
 | **Recurring payments** (Dashboard feature) | NOT a scheduler — only issues recurring API credentials (recurring ID + token) + lists recurring-capable methods | You tokenise + run your own billing loop. See `playbooks/subscriptions.md` |
 | **MOTO** (virtual terminal) | Dashboard-only manual card entry; approved channels only | Phone/mail orders. **No 3DS — merchant bears chargeback liability** |
-| **POS** (point of sale) | Card-present device; separate Peach offering, **thin public developer docs** | In-store/counter payments (SA + Mauritius). Hardware + commercials via Peach sales/support — do not improvise POS capabilities beyond §5 |
+| **POS** (point of sale) | Card-present Payment App on Sunmi; REST from a separate till or Intent API on the terminal | Public integration docs cover South Africa. Read `pos-integrations.md`; confirm other markets, hardware and enablement with Peach |
 | **Payouts** | Realtime EFT disbursements to SA bank accounts (float-funded) | Paying drivers/sellers/suppliers. See `playbooks/payouts-marketplace.md` |
 | **Mobile SDK** | Native iOS/Android SDK; **V2 current, V1 legacy** | Native apps. See `mobile.md` |
 | Dashboard ops | Transactions/refunds, credentials, domain allowlisting, recon/settlement reports, onboarding | Ops tasks; not an integration surface |
@@ -27,15 +37,15 @@ Method categories: card, EFT, BNPL, QR, wallet, voucher, mobile money, alternati
 | Need | First choice | Also consider | Why |
 |---|---|---|---|
 | Store on a supported platform | Official extension | Embedded only for headless | Plugin-first: Peach maintains the method/3DS/webhook wiring; you maintain keys. See `plugins/_matrix.md` |
-| Custom web app, one-off payment | Embedded Checkout | Hosted (more methods); Payments API (non-card, no redirect) | Embedded = on-site widget, Peach-hosted card fields keep you SAQ A; Hosted = full-page redirect with the widest method list |
+| New custom web app, one-off payment | Orchestration Embedded Checkout | Orchestration Hosted Checkout | Current Peach recommendation; see `sdk-web.md` |
 | Wallets on product/cart pages | Embedded Express | — | Express = wallet buttons only; no customisations, no tokenisation, device-dependent |
 | Invoices / no website | Payment Links | Payment Page (reusable); Xero (repeating invoices) | Links = invoice-style, no store needed; Page = one durable social/QR link |
-| Full flow control, non-card methods | Payments API | Checkout (if redirect acceptable) | Payments API = non-card, no redirect; you render OTP/waiting screens; AES-encrypted webhooks |
+| New custom flow, non-card methods | Orchestration Server-to-Server | Orchestration Checkout | Check per-method support and next actions in `orchestration-api.md`; classic Payments API is for existing integrations |
 | Card data on your own site | S2S — **PCI warning, challenge this instinct** | Embedded (SAQ A) almost always better | S2S raw card ⇒ SAQ A-EP/D + full PCI scope. Embedded keeps you SAQ A with the same customer experience. Say this out loud |
 | Subscriptions / recurring | Playbook `playbooks/subscriptions.md` | — | No Peach scheduler exists; design = tokenise + your loop (or extension recurring where supported) |
 | Paying out recipients | Payouts | — | Realtime EFT disbursement, float-funded, irreversible. See `payouts.md` |
-| Native mobile app | Mobile SDK V2 | Checkout-in-WebView (hybrid apps only) | SDK V2 = EMVCo-supported in-app 3DS; WebView browser 3DS is not. See `mobile.md` |
-| In-person / pay-on-pickup / counter | §5 below | Payment Link at collection; platform COD-style gateway | POS device exists (SA+MU, Hosted methods) but is sold, not documented — see §5 before answering |
+| Customer-facing online mobile app | Mobile SDK V2 | Checkout-in-WebView (hybrid apps only) | For card-present cashier apps use POS, not the online SDK. See `mobile.md` |
+| In-person / pay-on-pickup / counter | POS REST (separate till) or Intent (same terminal) | Payment Link at collection; platform COD-style gateway | See §5 and `pos-integrations.md`; custom Expo/Sunmi apps also load `pos-expo-sunmi.md` |
 | Legacy codebase already present | Check `legacy-surfaces.md` first | — | `/v1/checkouts` + `paymentWidgets.js` = COPYandPAY, not Checkout V2 |
 
 ## 3. Custom-vs-plugin decision aid
@@ -43,9 +53,9 @@ Method categories: card, EFT, BNPL, QR, wallet, voucher, mobile money, alternati
 Ask these 4 questions, in order:
 
 1. **Is the platform in Peach's extension list?** (WooCommerce, Shopify, Magento, Wix, Ecwid, nopCommerce, OpenCart, Gravity Forms, Xero, Take App; Medusa has a published community plugin.) Yes → default to the extension.
-2. **Are the flows standard?** (one-off checkout, refunds, simple tokenisation) — extensions cover them. Custom needs (headless storefront, custom checkout UX, non-card-only S2S flows, payouts-driven marketplaces) → custom build on Checkout/Payments API.
+2. **Are the flows standard?** (one-off checkout, refunds, simple tokenisation) — extensions cover them. Custom needs (headless storefront, custom checkout UX, non-card-only S2S flows, payouts-driven marketplaces) → new custom online build on Orchestration, or POS for card-present needs.
 3. **Who maintains it?** An extension shifts method/3DS/webhook maintenance to Peach's plugin releases. A custom build makes your team the maintainer of signature schemes, code mappings, and endpoint changes forever.
-4. **What's the timeline?** Extension: hours-to-days. Custom Checkout V2: days-to-weeks once webhooks + result codes + status confirmation are done properly.
+4. **What is the timeline?** Estimate after selecting the product, accounting for account enablement, recovery, testing and physical UAT for POS.
 
 **When NOT to build custom (default refusals):**
 - Platform has an official extension AND flows are standard → do not build custom; configure the extension.
@@ -54,7 +64,7 @@ Ask these 4 questions, in order:
 - Recurring anywhere without a scheduler plan → there is no Peach-managed subscription engine; the merchant owns the debit loop (`playbooks/subscriptions.md`).
 
 **Confidence rubric (attach to every recommendation):**
-- **High** (≥80% one approach clearly wins): supported platform + standard needs, or a hard constraint decides it (e.g. M-PESA ⇒ Payments API/Checkout, no choice).
+- **High** (≥80% one approach clearly wins): supported platform + standard needs, or a hard constraint decides it (for example, the required payment method is enabled on one suitable surface).
 - **Medium**: trade-offs exist but one option dominates on maintenance risk; state the trade-off in one line.
 - **Low** (<50% clear winner, or requirements unknown): present the trade-offs side by side, do NOT pick silently; run `discovery.md` first.
 
@@ -72,11 +82,16 @@ Ask these 4 questions, in order:
 
 ## 5. In-person payments: counter, pickup, tip jar, phone orders
 
-- **Peach DOES have a POS offering** (device, South Africa + Mauritius) that supports all Hosted
-  Checkout payment methods and can present payment links; PayJustNow is POS-supported but
-  POS-only (incl. refunds). Hardware, pricing, and capabilities beyond this are **not in the
-  developer docs** — route to Peach sales/support. Never state "Peach is online-only" (false) and
-  never invent POS specifics (also wrong).
+- **Integrated card-present payments are publicly documented.** For a separate web/tablet/computer
+  till, use POS Integrations REST: dispatch a sale, receive webhooks, poll by request ID, and refund.
+  For an app on the same Android terminal as Peach's Payment App, use the Intent API: sale, refund,
+  void and lookup. See `pos-integrations.md` for the distinct contracts and known documentation gaps.
+- **Custom Expo apps:** a separate till can use HTTPS through its backend; an on-terminal app needs
+  an Android native bridge and development/production build. Read `pos-expo-sunmi.md` before choosing
+  hardware or promising installation. Android alone does not establish Peach or Sunmi approval.
+- **Market and method scope:** current integration guides cover Sunmi in South Africa and REST card
+  payments. Broader POS product availability or Hosted Checkout methods do not establish API support
+  in Mauritius or for QR/PayByLink. Confirm those capabilities separately with Peach.
 - **Pay-on-pickup patterns** (customer orders online, pays at collection): (a) the platform's own
   pay-at-collection/cash-on-delivery gateway — not a Peach flow, zero fees via Peach, usually the
   pragmatic answer; (b) a **Payment Link** generated/sent when the customer arrives (email/SMS/
@@ -89,6 +104,10 @@ Ask these 4 questions, in order:
 - **Phone orders**: prefer a **Payment Link** sent to the customer's phone (3DS-protected,
   liability stays with the rail). **MOTO** (keying the card in) needs channel approval, has **no
   3DS — chargeback liability is yours**, and can create a registration token — fallback only.
+- **MOTO Dashboard update, checked 2026-10-07:** the hold option is labelled **Reserve funds**.
+  Successful debits offer **Proof of Payment**; successful holds offer **Proof of PreAuth**.
+  A preauthorisation still needs capture before settlement. The MOTO role processes payments but
+  does not expose MOTO credentials. [Current guide](https://developer.peachpayments.com/docs/dashboard-moto).
 - Offline bank transfers (customer EFTs you directly) are invisible to Peach — no webhook, no
   reconciliation, manual invoice marking.
 
@@ -124,9 +143,10 @@ Never leave a "does Peach support X?" to be inferred from silence. These are cap
   say so plainly rather than implying the API can toggle it.
 - **No built-in age verification on any surface** — checkout cannot enforce an age gate; do it in
   your app BEFORE creating the payment, and see `onboarding-and-eligibility.md` for restricted goods.
-- **No multi-entity group consolidation** — one entity = one credential set + one settlement
-  account; groups/franchises run per-entity accounts and consolidate in your own ledger (recon API
-  is scoped per merchantId).
+- **Consolidated Dashboard views exist.** Current Orchestration Dashboard guides describe transactions
+  across businesses, exports with merchant identifiers and team management. That does not establish
+  pooled settlement or shared API credentials; keep API/recon requests scoped to their merchant.
+  [Dashboard overview](https://playground.peachpayments.com/docs/dashboard-overview), checked 2026-10-07.
 - **No FX / display-currency conversion** — quoting in one currency and collecting in another is
   your app's job (see §7); Peach processes the transaction currency your account supports.
 - **No merchant-facing MCC controls** — category assignment happens at Peach onboarding/risk
@@ -148,10 +168,10 @@ API feature.
 
 ## Traps
 - "Payments API" ≠ Checkout API. Payments API is the no-redirect S2S surface for **non-card** methods (RCS store-card exception). Cards on Payments API do not exist — Apple/Google/Samsung Pay aren't in its brand enum.
-- S2S instinct for "card on my own site": challenge it — Embedded gives near-identical UX at SAQ A; S2S raw card = SAQ A-EP/D and full PCI scope. There is NO middle product (no Elements-style fully-stylable tokenised fields) — theming is limited by design.
+- S2S instinct for "card on my own site": challenge it — Embedded gives near-identical UX at SAQ A; S2S raw card = SAQ A-EP/D and full PCI scope. Classic Checkout has limited theming; Orchestration Web SDK offers Elements-style components and is covered in `sdk-web.md`.
 - Embedded Express ≠ full Embedded: no customisations, no tokenisation, wallets device-dependent.
 - "Recurring payments" in Dashboard is a credentials feature, not a scheduler — promising auto-billing is an invented capability.
 - Wix + Xero have **no sandbox**; Take App is live-only — don't route testable plans there.
 - Hosted Checkout exposes more methods than Embedded (e.g. PayPal is Hosted/Links/extensions, not Embedded).
-- In-person questions: do NOT answer from memory — POS exists (SA+MU) but its details live with Peach sales; link-at-collection, Payment Page QR, and MOTO are the documented online-side answers (§5).
-- The 10-product table and the matrix above decide the surface; method-level questions (refundable? limits? countries?) go to `methods-catalog.md`, not memory.
+- Route card-present POS questions to `pos-integrations.md`; do not substitute online Checkout, its mobile SDK, or Payment Links unless the user wants those alternatives.
+- The product table and the matrix above decide the surface; method-level questions (refundable? limits? countries?) go to `methods-catalog.md`, not memory.

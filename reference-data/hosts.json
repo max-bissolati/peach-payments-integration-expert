@@ -35,8 +35,16 @@
     "embeddedSdk": {
       "sandbox": "https://sandbox-checkout.peachpayments.com/js/checkout.js",
       "live": "https://checkout.peachpayments.com/js/checkout.js"
+    },
+    "orchestration": {
+      "sandbox": "https://app.sandbox-next.peachpayments.com/api",
+      "live": "https://app.next.peachpayments.com/api"
+    },
+    "pos": {
+      "sandbox": "https://pos-sandbox.peachpayments.com",
+      "live": "https://pos.peachpayments.com"
     }
   },
   "resultCodesEndpoint": "https://sandbox-card.peachpayments.com/v1/resultcodes",
-  "_source": "testing-and-go-live.md §6, checkout-v2.md, payouts.md, reconciliation.md"
+  "_source": "testing-and-go-live.md \u00a76, checkout-v2.md, payouts.md, reconciliation.md; orchestration-api.md and pos-integrations.md (checked 2026-10-07)"
 }

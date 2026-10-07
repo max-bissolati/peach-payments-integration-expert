@@ -26,13 +26,17 @@ tokenised card-fields product. That statement is about Checkout V2 only. The Orc
 **is** that product. Point pixel-perfect-card-field requests here. (The Checkout-V2 comparison itself is
 skill cross-reference, not a fact from the playground pages.)
 
+**Version check, 2026-10-07:** the current official Web SDK guide uses CDN version `0.133.4`.
+The client API shape below remains documented. No browser integration was executed during this
+reference update; verify the chosen version on the real checkout before deployment.
+
 ## 1. The client library — load, init, confirm
 
 - Load `HyperLoader.js` from Peach's versioned CDN (npm packages are **not published yet** — Peach will
   publish its own): `[DOCS playground.peachpayments.com/sdk-web]`
 
 ```html illustrative
-<script src="https://sdk.sandbox-next.peachpayments.com/sandbox/web/0.133.0/v1/HyperLoader.js"></script>
+<script src="https://sdk.sandbox-next.peachpayments.com/sandbox/web/0.133.4/v1/HyperLoader.js"></script>
 ```
 
 - Init and confirm, in order (the `clientSecret` comes from your server's `POST /payments` with
@@ -106,10 +110,13 @@ const { error, paymentIntent } = await hyper.confirmPayment({
   saved cards. The field name is documented; its full shape is not spelled out on the page — confirm in
   sandbox. `[DOCS sdk-web]` `[VERIFY-SANDBOX]`
 - Save a card with `hyper.confirmSetup({ elements, confirmParams })`. `[DOCS sdk-web]`
-- **Charging a saved `pm_` later is a merchant-initiated transaction (MIT)** — you reference it through
-  `recurring_details`, not a top-level `payment_method_id`. Only card-backed credentials can be stored and
-  charged this way (not alternative methods). Full MIT shape and the `mandate_data` setup step are in
-  `orchestration-api.md` §MIT. `[DOCS integrate/sdk, integrate/hosted-checkout]`
+- **Distinguish customer-present reuse from MIT.** A returning shopper can pay with a saved card
+  on-session using the same customer and a new payment. A later off-session charge is an MIT; reference
+  the credential through `recurring_details`, not a top-level `payment_method_id`. Only card-backed
+  credentials support these recurring flows. Full MIT shape and mandate setup are in
+  `orchestration-api.md` §10. [On-session reuse](https://playground.peachpayments.com/flows/save-card-on-session)
+  and [recurring via saved method](https://playground.peachpayments.com/flows/recurring-pm), reviewed
+  2026-10-07.
 
 ## 5. Inline iframe redirection for alternative methods
 
@@ -213,9 +220,13 @@ corner radius, border width) rather than CSS-like `rules`, with the same preset 
 
 ## Sources
 
-All `[DOCS]` facts fetched 2026-09-07 from the public Peach Orchestration docs
+Base `[DOCS]` facts were fetched 2026-09-07 from the public Peach Orchestration docs
 (playground.peachpayments.com — `llms-full.txt` + `openapi.json`): `/sdk-web`, `/integrate/sdk`,
 `/integrate/hosted-checkout`, `/operate/customization`, and the OpenAPI `PaymentsCreateRequest` /
 `PaymentLinkConfigRequest` schemas. Fields named on a page but not fully specified there are marked
 `[VERIFY-SANDBOX]`. The Checkout-V2 comparison in §0 is skill cross-reference (`checkout-v2.md`), not a
 playground fact.
+
+The `/sdk-web` section was rechecked against the fresh official `llms-full.txt` on 2026-10-07,
+including the CDN update to `0.133.4`. The other source dates above remain the baseline;
+this is not a blanket revalidation of every referenced OpenAPI field.

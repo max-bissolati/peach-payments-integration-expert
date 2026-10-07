@@ -1,0 +1,251 @@
+{
+  "schema_version": 1,
+  "scope": "Curated risk-sensitive sources, not every fact or page. Content ignores generated ReadMe frontmatter/index boilerplate only; index compares top-level linked URL membership. Run --deep for bodies.",
+  "sources": [
+    {
+      "url": "https://developer.peachpayments.com/llms.txt",
+      "kind": "index",
+      "sha256": "75bcd1a16574331deeffb41993e5f964190feb739942080972b0772e7a6e3771",
+      "baseline_date": "2026-10-07",
+      "review_note": "Reviewed index additions/removals and RSS; updated product routing, methods, payouts and versions."
+    },
+    {
+      "url": "https://developer.peachpayments.com/docs/product-portfolio-overview.md",
+      "kind": "markdown",
+      "sha256": "bb99d6801704d964cecd5e9f932fd711519affed613e06a1a0a3ec28ab797c68",
+      "baseline_date": "2026-10-07",
+      "review_note": "Reviewed source diff; routing, classic methods, payouts, security, MOTO and Shopify references updated as applicable."
+    },
+    {
+      "url": "https://developer.peachpayments.com/docs/checkout-overview.md",
+      "kind": "markdown",
+      "sha256": "c9ca7a2dd31e4fbd836544a3f54b064d52121a34ff9c7961603fd9c8c409761d",
+      "baseline_date": "2026-10-07",
+      "review_note": "Reviewed source diff; routing, classic methods, payouts, security, MOTO and Shopify references updated as applicable."
+    },
+    {
+      "url": "https://developer.peachpayments.com/docs/checkout-embedded.md",
+      "kind": "markdown",
+      "sha256": "ed3f2ea076485b330ecf214ffeb8f71cbdf68e6a8e6a13b36a824003af35f20c",
+      "baseline_date": "2026-10-07",
+      "review_note": "Reviewed source diff; routing, classic methods, payouts, security, MOTO and Shopify references updated as applicable."
+    },
+    {
+      "url": "https://developer.peachpayments.com/docs/checkout-embedded-authentication.md",
+      "kind": "markdown",
+      "sha256": "f776b22bac3d567fac9bd8cd736820c75f6ef0d6750f9d58e2b60300c2bb6f69",
+      "baseline_date": "2026-10-07",
+      "review_note": "Reviewed source diff; routing, classic methods, payouts, security, MOTO and Shopify references updated as applicable."
+    },
+    {
+      "url": "https://developer.peachpayments.com/docs/v2-checkout-hosted.md",
+      "kind": "markdown",
+      "sha256": "c692dafadf1eea776b19b2299c713ddcadaf74b7261f949b47286171c43adf51",
+      "baseline_date": "2026-10-07",
+      "review_note": "Reviewed source diff; routing, classic methods, payouts, security, MOTO and Shopify references updated as applicable."
+    },
+    {
+      "url": "https://developer.peachpayments.com/docs/checkout-webhooks.md",
+      "kind": "markdown",
+      "sha256": "5044d4cfa67bba31f4fce9c807dc2d53c48fa2c0e7e7fe7dbc9cf49decacec01",
+      "baseline_date": "2026-10-07",
+      "review_note": "Reviewed source diff; routing, classic methods, payouts, security, MOTO and Shopify references updated as applicable."
+    },
+    {
+      "url": "https://developer.peachpayments.com/docs/pp-payment-methods.md",
+      "kind": "markdown",
+      "sha256": "064c812d37b4a49623b81e760010246927ab863fda5d617e3ad647dc2fff5afa",
+      "baseline_date": "2026-10-07",
+      "review_note": "Reviewed source diff; routing, classic methods, payouts, security, MOTO and Shopify references updated as applicable."
+    },
+    {
+      "url": "https://developer.peachpayments.com/docs/payments-api-overview.md",
+      "kind": "markdown",
+      "sha256": "39f033b9a26d8b9246281098685d08024840d9dd215b1cfed3774b19fce3d9d5",
+      "baseline_date": "2026-10-07",
+      "review_note": "Reviewed source diff; routing, classic methods, payouts, security, MOTO and Shopify references updated as applicable."
+    },
+    {
+      "url": "https://developer.peachpayments.com/docs/payments-api-flows.md",
+      "kind": "markdown",
+      "sha256": "3b5de439b5d2194de2ad525d7747a7be593c6da5068777c642c8163999bc2738",
+      "baseline_date": "2026-10-07",
+      "review_note": "Reviewed source diff; routing, classic methods, payouts, security, MOTO and Shopify references updated as applicable."
+    },
+    {
+      "url": "https://developer.peachpayments.com/docs/payouts-api-1.md",
+      "kind": "markdown",
+      "sha256": "287085e2904c411687dabfb10a21241487b7a1cd43bdfd4b49fdbe881c01da69",
+      "baseline_date": "2026-10-07",
+      "review_note": "Reviewed source diff; routing, classic methods, payouts, security, MOTO and Shopify references updated as applicable."
+    },
+    {
+      "url": "https://developer.peachpayments.com/docs/peach-payouts.md",
+      "kind": "markdown",
+      "sha256": "00bdad0fe08f28c530a574f4e3530d849a466ab316ef4a2dc280712e3e41a398",
+      "baseline_date": "2026-10-07",
+      "review_note": "Reviewed source diff; routing, classic methods, payouts, security, MOTO and Shopify references updated as applicable."
+    },
+    {
+      "url": "https://developer.peachpayments.com/docs/dashboard-settings.md",
+      "kind": "markdown",
+      "sha256": "b90a37d584279d26c175629a63ba90670749e7ae30206030528bcad1173ac873",
+      "baseline_date": "2026-10-07",
+      "review_note": "Reviewed source diff; routing, classic methods, payouts, security, MOTO and Shopify references updated as applicable."
+    },
+    {
+      "url": "https://developer.peachpayments.com/docs/dashboard-moto.md",
+      "kind": "markdown",
+      "sha256": "1b0535971927e20ba8a6a6d2ba8a9c2f4edaa96b6152e62783e890ccae70268f",
+      "baseline_date": "2026-10-07",
+      "review_note": "Reviewed source diff; routing, classic methods, payouts, security, MOTO and Shopify references updated as applicable."
+    },
+    {
+      "url": "https://developer.peachpayments.com/docs/reference-test-and-go-live.md",
+      "kind": "markdown",
+      "sha256": "866de509f5a7b7c3c5dad68ac7ee6f0a10c6bd4b09d982099fdb281d18131747",
+      "baseline_date": "2026-10-07",
+      "review_note": "Reviewed source diff; routing, classic methods, payouts, security, MOTO and Shopify references updated as applicable."
+    },
+    {
+      "url": "https://developer.peachpayments.com/docs/shopify.md",
+      "kind": "markdown",
+      "sha256": "be0b27e82ae63108a4d4906d71ee461106b462c7c6a692bda0a92d8a2bc907c0",
+      "baseline_date": "2026-10-07",
+      "review_note": "Reviewed source diff; routing, classic methods, payouts, security, MOTO and Shopify references updated as applicable."
+    },
+    {
+      "url": "https://developer.peachpayments.com/docs/oppwa-integrations-server-to-server.md",
+      "kind": "markdown",
+      "sha256": "0d37fda982dbd100dc21e0ed9c6ce245b42b9627b3482649416a0eae693d05fa",
+      "baseline_date": "2026-10-07",
+      "review_note": "Reviewed source diff; routing, classic methods, payouts, security, MOTO and Shopify references updated as applicable."
+    },
+    {
+      "url": "https://developer.peachpayments.com/docs/pos-integrations-api.md",
+      "kind": "markdown",
+      "sha256": "8e23b5b90760329919b4ae6db3d436b7166f16b2fa5a40960e54ff018fd67797",
+      "baseline_date": "2026-10-07",
+      "review_note": "POS source reviewed for pos-integrations.md and pos-expo-sunmi.md; contradictions require device/sandbox verification."
+    },
+    {
+      "url": "https://developer.peachpayments.com/docs/terminal-integration-flows.md",
+      "kind": "markdown",
+      "sha256": "0a90343737384487fe9460d7c4fa651be4bda7bcd5275a9044b18289bf192092",
+      "baseline_date": "2026-10-07",
+      "review_note": "POS source reviewed for pos-integrations.md and pos-expo-sunmi.md; contradictions require device/sandbox verification."
+    },
+    {
+      "url": "https://developer.peachpayments.com/docs/pos-app-to-app.md",
+      "kind": "markdown",
+      "sha256": "1cf5b7ac3d757932b2225be27110f39a41193bf7f97c5909a763722f4b3bc3a0",
+      "baseline_date": "2026-10-07",
+      "review_note": "POS source reviewed for pos-integrations.md and pos-expo-sunmi.md; contradictions require device/sandbox verification."
+    },
+    {
+      "url": "https://developer.peachpayments.com/docs/pos-deploy-sunmi.md",
+      "kind": "markdown",
+      "sha256": "be3762ba8dcea0264a979c573dc36cfc08388e3b2a5729492757412ae4276d0d",
+      "baseline_date": "2026-10-07",
+      "review_note": "POS source reviewed for pos-integrations.md and pos-expo-sunmi.md; contradictions require device/sandbox verification."
+    },
+    {
+      "url": "https://developer.peachpayments.com/docs/pos-instore-webhooks.md",
+      "kind": "markdown",
+      "sha256": "173456ec2b60347bf6abb4b98380a711543139de9608af0ce2d2e87606bf523a",
+      "baseline_date": "2026-10-07",
+      "review_note": "POS source reviewed for pos-integrations.md and pos-expo-sunmi.md; contradictions require device/sandbox verification."
+    },
+    {
+      "url": "https://developer.peachpayments.com/docs/pos-intent-data-models.md",
+      "kind": "markdown",
+      "sha256": "7a6197cb58df80ce8b00598ef12a4a0bd524057c3a25595cc625a10d49801ffb",
+      "baseline_date": "2026-10-07",
+      "review_note": "POS source reviewed for pos-integrations.md and pos-expo-sunmi.md; contradictions require device/sandbox verification."
+    },
+    {
+      "url": "https://developer.peachpayments.com/docs/pos-intent-error-codes.md",
+      "kind": "markdown",
+      "sha256": "83f7ded39718445df3d2f25b6da6b8e5772ce52c2efcc039e9fd9c642dafbd80",
+      "baseline_date": "2026-10-07",
+      "review_note": "POS source reviewed for pos-integrations.md and pos-expo-sunmi.md; contradictions require device/sandbox verification."
+    },
+    {
+      "url": "https://developer.peachpayments.com/docs/pos-test-app-to-app.md",
+      "kind": "markdown",
+      "sha256": "8bc2dc178765b7cf88b815aa27792d037fc77ae623a00c7e461670d7fc7cc8a5",
+      "baseline_date": "2026-10-07",
+      "review_note": "POS source reviewed for pos-integrations.md and pos-expo-sunmi.md; contradictions require device/sandbox verification."
+    },
+    {
+      "url": "https://developer.peachpayments.com/docs/pos-test.md",
+      "kind": "markdown",
+      "sha256": "11de16aa7202de853c753d8ca6320dbaa266a6ed508cd6992f39e1cc99671ec0",
+      "baseline_date": "2026-10-07",
+      "review_note": "POS source reviewed for pos-integrations.md and pos-expo-sunmi.md; contradictions require device/sandbox verification."
+    },
+    {
+      "url": "https://playground.peachpayments.com/llms-full.txt",
+      "kind": "playground",
+      "sha256": "400fa5e3a716b6f77f1c701339f5e97dbda9a0abe65d1a7af7c405283a0f1ff3",
+      "baseline_date": "2026-10-07",
+      "review_note": "Reviewed SDK versions/package, PayJustNow, auth-specific confirm, browser_info, testing and new Dashboard pages; see docs-audit-2026-10-07.md for conflicts and scope."
+    },
+    {
+      "url": "https://playground.peachpayments.com/openapi.json",
+      "kind": "json",
+      "sha256": "0bae505154376f4dffd046eab2a203917ac52a273eca59b70f18bfe3e9874645",
+      "baseline_date": "2026-09-07",
+      "review_note": "Historical Orchestration mirror; whole-source drift does not imply every local reference is wrong."
+    },
+    {
+      "url": "https://developer.peachpayments.com/docs/payouts-dashboard.md",
+      "kind": "markdown",
+      "sha256": "8a9573c2cab401c5dff2eb5ed153d1891f696d0b560741629b829cc152b7cd98",
+      "baseline_date": "2026-10-07",
+      "review_note": "Reviewed payout recovery/bulk upload docs; parent applied payouts.md updates."
+    },
+    {
+      "url": "https://developer.peachpayments.com/reference/querypayoutrequestbypayoutid.md",
+      "kind": "markdown",
+      "sha256": "319e0845f8f8e4e9e074dbdc969e8f52521ac24ca7fc370581b5202897071350",
+      "baseline_date": "2026-10-07",
+      "review_note": "Reviewed payout recovery/bulk upload docs; parent applied payouts.md updates."
+    },
+    {
+      "url": "https://developer.peachpayments.com/docs/oppwa-guides-tokenisation.md",
+      "kind": "markdown",
+      "sha256": "f34345137dbe77a5418baf49bd12b67418d47f93dc8393993f09ca4ba14aa734",
+      "baseline_date": "2026-10-07",
+      "review_note": "Source reviewed for references/network-tokenisation.md; contract contradictions and untested provisioning remain explicit."
+    },
+    {
+      "url": "https://developer.peachpayments.com/docs/oppwa-integrations-server-to-server-network-tokens.md",
+      "kind": "markdown",
+      "sha256": "9baf96cdb1fc7bee0512ab5026f02884231dac8191ee58439748158a240bf519",
+      "baseline_date": "2026-10-07",
+      "review_note": "Source reviewed for references/network-tokenisation.md; contract contradictions and untested provisioning remain explicit."
+    },
+    {
+      "url": "https://developer.peachpayments.com/docs/oppwa-guides-tokenisation-network-tokens-test-cards.md",
+      "kind": "markdown",
+      "sha256": "3908f212e07d9a45e804cef87de303314991d5c276b9c6a40be3121fbf36a876",
+      "baseline_date": "2026-10-07",
+      "review_note": "Source reviewed for references/network-tokenisation.md; contract contradictions and untested provisioning remain explicit."
+    },
+    {
+      "url": "https://developer.peachpayments.com/docs/oppwa-references-release-notes.md",
+      "kind": "markdown",
+      "sha256": "5e7d7a35b377e282956a424da86f1cf4940b3a5b8c7f31d2636f3dd37b5220a2",
+      "baseline_date": "2026-10-07",
+      "review_note": "Source reviewed for references/network-tokenisation.md; contract contradictions and untested provisioning remain explicit."
+    },
+    {
+      "url": "https://playground.peachpayments.com/integrate/api-only.md",
+      "kind": "playground",
+      "sha256": "5f7ed1e5be58c3d6d8203e869c5806e66a4c3a0039611a53ae17a6ae0d59379a",
+      "baseline_date": "2026-10-07",
+      "review_note": "Source reviewed for references/network-tokenisation.md; contract contradictions and untested provisioning remain explicit."
+    }
+  ]
+}

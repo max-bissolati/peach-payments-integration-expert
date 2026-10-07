@@ -1,5 +1,14 @@
 # Legacy Surfaces
 
+
+**Routing update, verified 2026-10-07:** Peach now recommends Orchestration for new custom online
+integrations. Existing classic Checkout/Payments API integrations remain documented; do not relabel
+that guidance as an announced shutdown or force a migration during unrelated maintenance.
+Read `sdk-web.md` and `orchestration-api.md` for new builds. Sources:
+[product portfolio](https://developer.peachpayments.com/docs/product-portfolio-overview),
+[Checkout overview](https://developer.peachpayments.com/docs/checkout-overview),
+[Payments API overview](https://developer.peachpayments.com/docs/payments-api-overview).
+
 ## When to load
 Load when an existing codebase shows `/v1/checkouts` + `paymentWidgets.js`, oppwa-style URLs, Mobile SDK V1, or Checkout V1 `/status` — identify what you're looking at BEFORE proposing changes or "migrations".
 
@@ -7,12 +16,12 @@ Load when an existing codebase shows `/v1/checkouts` + `paymentWidgets.js`, oppw
 
 | Legacy surface | What it is | Tell-tale signs | Often confused with | Current equivalent |
 |---|---|---|---|---|
-| **COPYandPAY** | SAQ-A payment widget (the classic widget flow) | `POST /v1/checkouts`; `paymentWidgets.js`; `wpwlOptions` config object | Checkout V2 (no deprecation banner on its docs) | **Checkout Embedded/Hosted V2** (`/v2/checkout` + `checkout.js` SDK) |
-| **Server-to-Server (OPPWA)** | Direct API with raw card data; parameters in the request body (never the URL); registration + network tokens; standalone 3DS and exemption handling done merchant-side | `POST /v1/payments` with `card.number`; oppwa parameter style | Payments API v2 (different surface; v2 is non-card) | **Payments API v2** for non-card; **Embedded + tokenisation** (`createRegistration`) for cards — raw-card S2S still exists but carries SAQ A-EP/D (`pci-security.md`) |
+| **COPYandPAY** | SAQ-A payment widget (the classic widget flow) | `POST /v1/checkouts`; `paymentWidgets.js`; `wpwlOptions` config object | Checkout V2 (no deprecation banner on its docs) | **Orchestration Embedded/Hosted** for new integrations; classic Checkout V2 remains a separate existing surface |
+| **Server-to-Server (OPPWA)** | Direct API with raw card data; parameters in the request body (never the URL); registration + network tokens; standalone 3DS and exemption handling done merchant-side | `POST /v1/payments` with `card.number`; oppwa parameter style | Payments API v2 (different surface; v2 is non-card) | **Orchestration** for new custom online integrations; preserve existing classic API contracts during maintenance — raw-card S2S still exists but carries SAQ A-EP/D (`pci-security.md`) |
 | **Checkout V1 status** | Old signed status read | `GET /v1/checkout/{id}/status` style / `/status?...&signature=` calls | Checkout V2 status | **`GET /v2/checkout/{checkoutId}/status`** (Bearer, flat dotted keys) |
 | **Mobile SDK V1** | Legacy native SDK | SDK <8.x imports; IPWorks references; manual download via support | Mobile SDK V2 | **Mobile SDK V2** (`mobile.md`) |
 
-Deprecation-status honesty: **the docs carry no deprecation banners** on these pages, and the `oppwa-*` URL tree hosts BOTH legacy and current documentation — agents regularly read COPYandPAY pages as current Checkout V2. Check the endpoints, not the page styling.
+Deprecation-status honesty: migration callouts now recommend Orchestration for new integrations; this is not proof of a shutdown date, and the `oppwa-*` URL tree hosts BOTH legacy and current documentation — agents regularly read COPYandPAY pages as current Checkout V2. Check the endpoints, not the page styling.
 
 ## 2. COPYandPAY specifics (for reading old code)
 
@@ -34,7 +43,7 @@ Refund routing by origin (`payments-api.md` covers the others): Checkout-origin 
 | COPYandPAY widget | Map to Checkout Embedded (SDK `initiate`/`render`, eventHandlers replace wpwlOptions callbacks); Hosted if redirect was in use |
 | `/status?...&signature=` reads | Replace with `GET /v2/checkout/{id}/status` (Bearer auth; the old signed-status pattern is deprecated — the signature can't be reused) |
 | Raw-card S2S payment calls | Replace with `createRegistration` tokenisation on Checkout at SAQ A; if raw-card S2S must stay, it also needs merchant-side EMVCo 3DS handling (standalone 3DS / exemption management are S2S features) — budget for the PCI cost first |
-| Network-token logic | Carry across: network tokens are current (`recurring-and-tokenisation.md`); the expiry-keyed test cards still apply |
+| Network-token logic | Identify vault ownership and destination connector first (`network-tokenisation.md`). Classic expiry-keyed test cards do not establish Orchestration simulator behavior or token portability |
 | Mobile SDK V1 | Plan migration to V2 (`mobile.md`); V1's cert-expiry episode is the risk argument |
 
 Reading old S2S/OPPWA code: request parameters live in the body (never URL); MIT/reg-token semantics (`paymentType` TK/TF, cryptogram rules) match the current tokenisation model — see `recurring-and-tokenisation.md` rather than re-deriving from the OPPWA pages.

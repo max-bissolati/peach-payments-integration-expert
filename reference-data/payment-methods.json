@@ -1,5 +1,5 @@
 {
-  "_note": "Method availability is entity-dependent (check GET /v2/channels/{entityId}/payment-methods).",
+  "_note": "Method availability is entity-dependent (check GET /v2/channels/{entityId}/payment-methods). Classic product catalogue; POS here does not promise POS REST method support. Orchestration has a separate catalogue.",
   "_source": "references/methods-catalog.md",
   "methods": [
     {
@@ -145,13 +145,15 @@
       "name": "PayJustNow",
       "code": "PAYJUSTNOW",
       "surfaces": [
+        "Checkout",
         "POS"
       ],
-      "refundable": "none",
+      "refundable": "full",
       "recurring": false,
       "currencies": [
         "ZAR"
-      ]
+      ],
+      "notes": "Full and partial refunds per classic docs, checked 2026-10-07; customer.email required for Checkout."
     },
     {
       "name": "Scan to Pay (Masterpass)",
