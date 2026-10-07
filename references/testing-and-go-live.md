@@ -3,6 +3,10 @@
 ## When to load
 Load for sandbox setup, test data selection, pre-launch checks, and any "going live" question. The verification gate (§5) is the definition of done for any integration task.
 
+For POS, use `pos-integrations.md` and `pos-expo-sunmi.md`: Mock Payment App tests, provisioned
+UAT terminals, round/non-round amount cases, then actual hardware acceptance. Online card test
+numbers and the scripts' online profiles do not establish POS readiness.
+
 ## 1. Sandbox
 
 - **Access**: sign up, or the **Sandbox** button in the live Dashboard (`sandbox-dashboard.peachpayments.com`). Available soon after signup; live access follows Peach risk approval. All credentials live in the sandbox Dashboard.
@@ -14,6 +18,14 @@ Load for sandbox setup, test data selection, pre-launch checks, and any "going l
   - WooCommerce / Gravity Forms plugins use the **"Integrator Test"** transaction mode. Auto-approval of 3DS in that mode is observed in sandbox testing, not doc-stated — verify challenge flows in your own sandbox before relying on it. `[VERIFY-SANDBOX]`
   - Bank selectors expose a **SIMULATOR** bank option — use it for EFT/bank scenarios.
   - `enableTestMode` rule: Payments API tests of PayShap, Capitec Pay, Float, RCS, blink by Emtel, MCB Juice, MauCAS need `"customParameters[enableTestMode]":"true"`; **Checkout does not**.
+
+For classic Checkout PayJustNow, send `customer.email`, create a sandbox PayJustNow account,
+and use accessible email/phone for verification and SMS OTP. Pay with the documented test cards.
+[Source, checked 2026-10-07](https://developer.peachpayments.com/docs/reference-test-and-go-live#payjustnow).
+
+For Orchestration ZeroPay testing, current testing guidance uses R30 (`3000` minor units),
+instalments without cents, ID/OTP steps and then a standard test card. Keep this separate from
+classic API amount formatting. [Source](https://playground.peachpayments.com/docs/testing).
 
 ## 2. Card test data
 
@@ -71,7 +83,7 @@ Expiry xx/**2031** valid (ACTIVE after ~2s) · **2032** not eligible · **2033**
 | **Float** | enableTestMode (PA). Card `5200000000000023`, any CVV, future expiry; **whole-rand amounts** (R60 divides evenly across 2–6 instalments) |
 | **Happy Pay** | Create test account at `qa.happypay.co.za/register_test`; any 4-digit code; **PAY IN INSTALMENTS** → **Simulate Card**. One active instalment per account — multiple accounts for multiple scenarios |
 | **Scan to Pay** | `merchantTransactionId` ≤ 45 chars. Debit prefixes: `50010001000105`→`00` success · `50010001000101`→`51` insufficient · `50020001000103`→`91` issuer failure. Credit: `50020001000105` success · `50020001000101` insufficient · `50020001000103` failure. Don't close the browser after paying |
-| **RCS** | enableTestMode (PA). Card `6010240000000000`; amount-coded: `1.00`→`000.100.110` · `0.75`/`0.80`→`100.396.101` · `1.15`→`900.100.100` |
+| **RCS** | enableTestMode (PA). Card `6010240000000000000`; amount-coded: `1.00`→`000.100.110` · `0.75`/`0.80`→`100.396.101` · `1.15`→`900.100.100` |
 | **blink by Emtel** | enableTestMode (PA). Requests: `51111213`→`200.100.501` · `51111215`→`000.200.000` · `51111206`→`900.300.600`. Status: `51111322`→`800.100.203` insufficient · `51100000`→`000.100.110` success (let confirmation expire) |
 | **MCB Juice** | enableTestMode (PA). `1.25`→`100.380.501` consent expired · `1.40`→`900.100.201` error. **Success not testable end-to-end** |
 | **MauCAS** | enableTestMode (PA). `16.40`→`000.200.000` pending→success after 5 min · `15.40`→`600.100.100` · `16.30`→`900.100.100` · `25.00`→`800.100.152` failed (30–90s) · `25.10`→`000.000.000` success (30–90s) |

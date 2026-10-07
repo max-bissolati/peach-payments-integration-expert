@@ -256,6 +256,19 @@ function runFootgunScan(integrationDir) {
   }
   if (current) findings.push(current);
 
+  const m = combined.match(/(\d+)\s+FAIL,\s+(\d+)\s+WARN/);
+  // Preserve structured failures, but never let clean/warning text hide a failed process.
+  if (res.status !== 0 && (!m || Number(m[1]) === 0)) {
+    return {
+      status: 'FAIL',
+      reason: `check-integration exited with code ${res.status}`,
+      fails: 1,
+      warns: m ? Number(m[2]) : 0,
+      findings,
+      rawOutput: combined
+    };
+  }
+
   if (combined.includes('No code files found in:')) {
     return {
       status: 'WARN',
@@ -267,7 +280,6 @@ function runFootgunScan(integrationDir) {
     };
   }
 
-  const m = combined.match(/(\d+)\s+FAIL,\s+(\d+)\s+WARN/);
   if (m) {
     const fails = parseInt(m[1], 10);
     const warns = parseInt(m[2], 10);
@@ -308,17 +320,6 @@ function runFootgunScan(integrationDir) {
       fails: 0,
       warns: 0,
       findings: [],
-      rawOutput: combined
-    };
-  }
-
-  if (res.status !== 0) {
-    return {
-      status: 'FAIL',
-      reason: `check-integration exited with code ${res.status}`,
-      fails: 1,
-      warns: 0,
-      findings,
       rawOutput: combined
     };
   }
@@ -915,6 +916,23 @@ function runSelftest() {
     fs.writeFileSync(path.join(footgunDir, 'handler.js'), `function check(payload) { return payload.${badKey}; }\n`);
 
     // (a) clean integration + complete sandbox .env → PREFLIGHT PASS
+    t('footgun scan rejects failed processes despite success or warning output', () => {
+      const originalSpawnSync = child_process.spawnSync;
+      try {
+        for (const status of [1, 2, null]) {
+          for (const stdout of ['✓ no Peach integration footguns found.', '0 FAIL, 0 WARN', '0 FAIL, 3 WARN', 'No code files found in: fixture']) {
+            child_process.spawnSync = () => ({ status, stdout, stderr: '' });
+            const result = runFootgunScan(cleanDir);
+            if (result.status !== 'FAIL' || result.fails < 1) {
+              throw new Error(`failed process incorrectly accepted: ${status}, ${stdout}`);
+            }
+          }
+        }
+      } finally {
+        child_process.spawnSync = originalSpawnSync;
+      }
+    });
+
     t('fixture (a): clean integration + complete sandbox .env → PREFLIGHT PASS', () => {
       const res = runCli([cleanDir, '--env', envAPath]);
       if (res.status !== 0) {

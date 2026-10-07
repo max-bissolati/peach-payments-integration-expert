@@ -69,12 +69,24 @@ sentence and keep the technical detail in the code you write, not in the convers
 - **EFT** — paying by bank transfer instead of a card. **BNPL** — "buy now, pay later" (Payflex etc.).
 - **Sandbox** — a free test mode with fake cards, so you can practise before taking real money.
 
+## POS discovery branch
+
+For in-store or terminal payments, infer what is already known, then establish:
+
+- Same Sunmi terminal as the Payment App, or a separate web/tablet/computer till?
+- Exact model, Android/API level, memory/ABI, country and currency, provisioned Payment App version?
+- REST enablement/API key or Intent Maven access, UAT terminal/account, backend and webhook availability?
+- Sale, partial refunds, voids, receipts, printer/scanner, offline basket capture, and multi-terminal needs?
+
+Route to `pos-integrations.md`, then `pos-expo-sunmi.md` for Expo. Do not ask online-wallet or 3DS
+questions for a card-present cashier flow. An offline basket is not an offline card approval.
+
 ## The questionnaire
 
 1. **What are you building on?**
    WooCommerce / Shopify / Magento / Wix / Ecwid / nopCommerce / OpenCart / Gravity Forms / Xero / Medusa / custom web / mobile app / something else.
    *Why it matters:* a supported platform routes plugin-first.
-   *Branch:* any named platform → `plugins/_matrix.md` + the platform file. Custom web → `products-and-routing.md` then `checkout-v2.md`. Mobile → `mobile.md`.
+   *Branch:* any named platform → `plugins/_matrix.md` + the platform file. Custom web → `products-and-routing.md` then `sdk-web.md` / `orchestration-api.md` for new integrations. Online mobile → `mobile.md`; cashier POS → `pos-integrations.md`.
 
 2. **What are you collecting?**
    One-off payments / subscriptions or recurring / invoices or pay-links / deposits+capture (auth-then-capture) / payouts to users / donations.
@@ -94,7 +106,7 @@ sentence and keep the technical detail in the code you write, not in the convers
 5. **Checkout experience constraint?**
    On-site embedded vs redirect acceptable vs wallet-buttons-only.
    *Why it matters:* decides Embedded vs Hosted vs Express vs Payments API custom UI.
-   *Branch:* Embedded → `checkout-v2.md` (container ≥640px, eventHandlers); Express wallet work → `checkout-v2.md` Express section.
+   *Branch:* new online builds → `sdk-web.md`; existing classic Checkout → `checkout-v2.md` (including its Express section).
 
 6. **Existing Peach account?**
    Sandbox access? Which methods are enabled? Acquirer?

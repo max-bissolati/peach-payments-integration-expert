@@ -3,6 +3,15 @@
 ## When to load
 Load for security reviews, key/credential handling, any PCI question, and always BEFORE building an S2S card flow.
 
+Card-present POS keeps card processing in Peach's Payment App. Never collect PAN/PIN in an
+Expo till or store supervisor PINs. Keep POS REST merchant keys on the backend, authenticate tills
+and webhooks, and confirm terminal deployment and PCI obligations with Peach and the assessor.
+The ecommerce SAQ classifications below do not establish a POS application's compliance scope.
+
+Network tokens are not a blanket PCI exemption. Use `network-tokenisation.md` to distinguish
+vault IDs from token credentials and cryptograms; assess raw S2S token handling separately from
+hosted collection.
+
 ## 1. SAQ A is the target
 
 Design goal: the merchant's PCI scope stays minimal. Every Peach hosted surface exists to keep card data away from your servers.
@@ -18,6 +27,11 @@ Levels by e-commerce volume (docs): L1 >6M / L2 1–6M / L3 20k–1M / L4 below.
 **Challenge the S2S instinct:** "card fields on my own site" costs SAQ A-EP/D (network scanning, script controls, full policy suite). Embedded Checkout gives the on-site look at SAQ A. Recommend S2S raw card only when a hard requirement forces it — and say the compliance cost out loud.
 
 **Customer-facing copy you may reuse (docs' own positioning):** Peach is a PCI DSS v4.x Level 1 compliant service; cardholder details are transmitted directly from the customer's browser to Peach Payments (merchant servers never see them on hosted surfaces).
+
+Dashboard two-factor authentication is always required as of 2026-10-05. Owner/admin reset of
+2FA enrolment removes the authenticator binding, not the requirement; the user enrols again at
+next login. Do not advise disabling 2FA as an access workaround.
+[Current settings](https://developer.peachpayments.com/docs/dashboard-settings#reset-two-factor-authentication-enrolment).
 
 ## 2. Credential governance
 

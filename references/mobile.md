@@ -5,6 +5,9 @@ Load for any native mobile app payment question (iOS/Android), for hybrid apps (
 Flutter, WebView) deciding how to integrate, and for anyone who says "Mobile SDK" without saying
 which version — the answer changes everything downstream (hosts, auth shape, webhook crypto).
 
+For cashier apps accepting cards on a physical terminal, load `pos-integrations.md` and
+`pos-expo-sunmi.md` instead. The online Mobile SDK V2 does not control Peach's card-present Payment App.
+
 ## 0. Two unrelated products both live under "mobile"
 
 Peach has **two separate mobile-payment products**. They do not share a backend, an auth model,
@@ -22,9 +25,13 @@ mixing hosts/credentials between them fails outright.
 
 **Correction to earlier guidance**: this file previously said no React Native or Flutter SDK
 exists "for either SDK version." That was true for Checkout V2 and for legacy Mobile SDK V1, but
-Mobile SDK V2 ships official `@juspay-tech/hyperswitch-sdk-react-native` and
+Mobile SDK V2 ships official `@peach-payments/react-native` and
 `peachpayments_flutter` packages `[DOCS]`. If a merchant is on Checkout V2, the WebView guidance
 in §9 still stands.
+
+The current React Native package is `@peach-payments/react-native@1.1.0`, replacing the earlier
+reference to `@juspay-tech/hyperswitch-sdk-react-native`. Update install commands and imports
+together. This package is for online payment sheets, not terminal card taps.
 
 The rest of this section (§1–§8) covers Mobile SDK V2 / Peach Orchestration only. Orchestration is
 bigger than its mobile SDKs: the server-side REST API (capture/refund/mandates/customers/webhooks) is in
@@ -37,34 +44,44 @@ same backend.
 |---|---|
 | Native iOS | **Mobile SDK V2 iOS** (Swift, `Hyperswitch` module). Min **iOS 15.1+**. `[DOCS]` |
 | Native Android | **Mobile SDK V2 Android** (Kotlin, `io.peachpayments`). Min **Android 7.0 / API 24+**. `[DOCS]` |
-| React Native | Official `@juspay-tech/hyperswitch-sdk-react-native` wraps the native iOS/Android SDKs. Min **RN 0.70+**, Android `minSdkVersion 21`. `[DOCS]` |
-| Flutter | Official `peachpayments_flutter` wraps the native SDKs. Min **Flutter 3.0+ / Dart 2.17+** (iOS 15.1, Android minSdk 21). `[DOCS]` |
+| React Native | Official `@peach-payments/react-native` wraps the native iOS/Android SDKs. Min **RN 0.70+**; guide says Android `minSdkVersion 21`, conflicting with native API 24 below. `[DOCS]` |
+| Flutter | Official `peachpayments_flutter` wraps the native SDKs. Min **Flutter 3.0+ / Dart 2.17+**, iOS 15.1; guide says Android minSdk 21, conflicting with native API 24 below. `[DOCS]` |
 | Any app already on Checkout V2 (not Orchestration) | No native SDK — use Checkout-in-WebView per §9, or migrate the merchant to Orchestration first. |
 
-If you don't know which backend the merchant's account is provisioned on, ask — the credentials
-(`pk_snd_.../pk_prd_...` publishable key vs OAuth client/secret) tell you immediately: a
-`pk_`-prefixed key means Orchestration/Mobile SDK V2.
+Confirm the provisioned product and credential type. Orchestration publishable keys use
+`pk_snd_...` / `pk_prd_...`; a generic `pk_` prefix alone is not proof that a key belongs in an app.
+The POS Integrations docs use `pk_live_...` for a merchant API key that must stay on your backend.
+Checkout V2 uses OAuth client/secret credentials.
+
+**Android minimum conflict:** the native Android guide says API 24+, while the React Native and
+Flutter guides still say minSdk 21. These wrappers use the native layer. Treat API 24 as a
+conservative planning floor and verify the selected package's merged manifest, Gradle build,
+and real-device behavior before promising older Android support. Do not force a lower minimum
+by overriding a dependency requirement.
 
 ## 2. Mobile SDK V2 — install & bootstrap
+
+Versions below were rechecked on **2026-10-07** against the platform guides and the
+2026-10-05 release notes. They are documentation-verified, not build-tested.
 
 All four platforms follow the same three-step shape: **create a session with a publishable key →
 init with a server-issued `client_secret` → present the payment sheet.**
 
 | Platform | Package | Current version `[DOCS]` | Distribution |
 |---|---|---|---|
-| iOS | `peachpayments-hyperswitch-ios` (+ `-lite`, `-authentication`) | `0.7.0` | CocoaPods, **private spec repo**, not trunk |
-| Android | `io.peachpayments:hyperswitch-sdk-android` | `1.5.0` (Gradle plugin `0.2.9`) | Peach's own GitLab Maven registry, anonymous read |
-| React Native | `@juspay-tech/hyperswitch-sdk-react-native` | — (npm) | npm + CocoaPods for the iOS side |
-| Flutter | `peachpayments_flutter` (+ `_netcetera_3ds`, `_scancard` optional; `_airborne` not yet published) | `1.1.0` | pub.dev |
+| iOS | `peachpayments-hyperswitch-ios` (+ `-lite`, `-authentication`) | `0.7.4` | CocoaPods, **private spec repo**, not trunk |
+| Android | `io.peachpayments:hyperswitch-sdk-android` | `1.5.5` (Gradle plugin `0.2.14`) | Peach's own GitLab Maven registry, anonymous read |
+| React Native | `@peach-payments/react-native` | `1.1.0` | npm + CocoaPods for the iOS side |
+| Flutter | `peachpayments_flutter` (+ `_netcetera_3ds`, `_scancard` optional; `_airborne` not yet published) | core `1.4.0`; optional plugins `1.1.3` | pub.dev |
 
 ```ruby illustrative
 # iOS Podfile — BOTH sources are required, the pod is not on CocoaPods trunk
 source 'https://github.com/peach-payments/hyperswitch-sdk-ios.git'
 source 'https://cdn.cocoapods.org/'
-pod 'peachpayments-hyperswitch-ios', '~> 0.7'
+pod 'peachpayments-hyperswitch-ios', '~> 0.7.4'
 ```
 `[DOCS playground.peachpayments.com/sdk-mobile/ios]` Then `pod repo update && pod install`. The
-the Swift module is imported as `import Hyperswitch` (this is the module name the pod exposes) —
+Swift module is imported as `import Hyperswitch` (this is the module name the pod exposes) —
 keep that import line as-is; don't rename it.
 
 ```kotlin illustrative
@@ -73,19 +90,19 @@ maven { url = uri("https://gitlab.com/api/v4/projects/81506485/packages/maven") 
 maven { url = uri("https://maven.juspay.in/hyper-sdk/") }
 maven { url = uri("https://jitpack.io") }
 
-implementation("io.peachpayments:hyperswitch-sdk-android:1.5.0")
+implementation("io.peachpayments:hyperswitch-sdk-android:1.5.5")
 // ProGuard/R8: -keep class io.peachpayments.** { *; }
 ```
-`[DOCS playground.peachpayments.com/sdk-mobile/android]` The Gradle **plugin** bump (`0.2.9`) is
+`[DOCS playground.peachpayments.com/sdk-mobile/android]` The Gradle **plugin** bump (`0.2.14`) is
 not cosmetic — it pins the SDK version inside its own artifact, so an old plugin silently keeps
 resolving an old SDK even after you bump the dependency line.
 
-```dart illustrative
+```yaml illustrative
 # Flutter pubspec.yaml
 dependencies:
-  peachpayments_flutter: ^1.1.0
-  peachpayments_flutter_netcetera_3ds: ^1.1.0   # optional
-  peachpayments_flutter_scancard: ^1.1.0        # optional
+  peachpayments_flutter: ^1.4.0
+  peachpayments_flutter_netcetera_3ds: ^1.1.3   # optional
+  peachpayments_flutter_scancard: ^1.1.3        # optional
 ```
 `[DOCS playground.peachpayments.com/sdk-mobile/flutter]` Then `flutter pub get`, and — Android
 only — run `dart run peachpayments_flutter:apply_plugins` **after every upgrade**, not just once.
@@ -94,16 +111,17 @@ On iOS the Flutter plugin still needs both Podfile sources above (it depends on
 extend `FlutterFragmentActivity`, not `FlutterActivity`, or the wallet-button widget fails to
 attach.
 
-React Native install: `npm install @juspay-tech/hyperswitch-sdk-react-native` then
-`cd ios && pod install`; Android needs `minSdkVersion 21`. `[DOCS]`
+React Native install: `npm install @peach-payments/react-native@1.1.0` then
+`cd ios && pod install`. The RN guide lists Android `minSdkVersion 21`; apply the native
+minimum conflict check in §1 before selecting the actual minimum. `[DOCS]`
 
 ### Bootstrap code, all four platforms
 
-```swift runnable
+```swift illustrative
 // iOS
 import Hyperswitch
 let paymentSession = PaymentSession(
-    publishableKey: "pk_test_your_publishable_key",
+    publishableKey: "pk_snd_your_publishable_key",
     customBackendUrl: "https://app.sandbox-next.peachpayments.com/api"
 )
 paymentSession.initPaymentSession(paymentIntentClientSecret: clientSecret)
@@ -118,13 +136,13 @@ paymentSession.presentPaymentSheet(viewController: self, configuration: configur
 ```
 `[DOCS playground.peachpayments.com/sdk-mobile/ios]`
 
-```kotlin runnable
+```kotlin illustrative
 // Android
 import io.peachpayments.PaymentSession
 import io.peachpayments.paymentsheet.PaymentSheet
 import io.peachpayments.paymentsheet.PaymentSheetResult
 
-paymentSession = PaymentSession.Builder(this, "pk_test_your_publishable_key")
+paymentSession = PaymentSession.Builder(this, "pk_snd_your_publishable_key")
     .customBackendUrl("https://app.sandbox-next.peachpayments.com/api")
     .build()
 paymentSession.initPaymentSession(clientSecret)
@@ -139,11 +157,11 @@ paymentSession.presentPaymentSheet { result ->
 `[DOCS playground.peachpayments.com/sdk-mobile/android]` Create the `PaymentSession` inside the
 Activity's `onCreate()`.
 
-```typescript runnable
+```typescript illustrative
 // React Native
-import { HyperProvider, useHyper } from '@juspay-tech/hyperswitch-sdk-react-native';
+import { HyperProvider, useHyper } from '@peach-payments/react-native';
 
-<HyperProvider publishableKey="pk_test_your_publishable_key"
+<HyperProvider publishableKey="pk_snd_your_publishable_key"
   customBackendUrl="https://app.sandbox-next.peachpayments.com/api">
   {/* app */}
 </HyperProvider>
@@ -156,11 +174,11 @@ const result = await presentPaymentSheet(session);   // { type_, code, message, 
 shopper dismissed the sheet. `initPaymentSession` must resolve before `presentPaymentSheet` is
 called — there's no internal queueing.
 
-```dart runnable
+```dart illustrative
 // Flutter
 final _peach = PeachPayments();
 _peach.init(HyperConfig(
-  publishableKey: 'pk_test_your_publishable_key',
+  publishableKey: 'pk_snd_your_publishable_key',
   customBackendUrl: 'https://app.sandbox-next.peachpayments.com/api',
 ));
 await _peach.initPaymentSession(PaymentSheetParams(clientSecret: checkoutData.clientSecret));
@@ -291,9 +309,10 @@ attached to that customer. `[DOCS playground.peachpayments.com/flows/save-card-o
   events do fire, but there is no dispute-response API — respond via the Dashboard (`reconciliation.md`
   § Disputes). Each payload carries an `event_id` (dedupe on it), `event_type`, the full object, and a
   timestamp.
-- Retry: 24 hours, escalating intervals (exact schedule not enumerated on the fetched page —
-  documented as "24-hour retry with escalating intervals," not itemised minute-by-minute the way
-  Payments API v2's schedule is).
+- The current [webhook flow](https://playground.peachpayments.com/flows/webhooks) documents retries
+  up to 24 hours at 1 minute, 5 minutes, 10 minutes, 1 hour, 6 hours and 24 hours (reviewed
+  2026-10-07). The operations page gives general replay guidance without repeating the cadence.
+  Keep durable deduplication and recovery; do not assume a manual replay cannot arrive later.
 - Configure via Dashboard or API.
 
 ## 8. Theming — payment-sheet Appearance API
@@ -316,6 +335,19 @@ the same shape (`PaymentSheetColors`, `PaymentSheetShapes`, `PaymentSheetTypogra
 `PaymentSheetPrimaryButton`). This is theming of Peach's **ready-to-use payment sheet**, not a
 build-your-own-fields product — same "no fully custom card-fields UI" ceiling that Checkout V2 has
 (`checkout-v2.md` §"There is no fully-stylable tokenised card-fields product").
+
+### October 2026 SDK behavior changes
+
+The [2026-10-05 release notes](https://playground.peachpayments.com/docs/release-notes) describe
+three fixes to verify during upgrade: billing fields now honor disabled collection when the
+connector does not require them; a configured country no longer prevents state/province
+prefill; and input borders now honor width/radius across all fields. Property names differ:
+iOS `appearance.borderWidth` / `cornerRadius`, Android `shapes.borderStrokeWidthDp` /
+`cornerRadiusDp`, Flutter/React Native `shapes.borderWidth` / `borderRadius`.
+
+Flutter also adds `link`, `addPaymentMethodButton`, and `useSavedPaymentMethodButton` colors
+on the light/dark objects in `Appearance.colors`. Test saved/new-card toggles, billing settings,
+state prefill and custom field styling in the actual SDK UI after upgrading.
 
 ## 9. Hybrid apps still on Checkout V2 — WebView Checkout
 
@@ -394,8 +426,8 @@ Documented honestly as gaps rather than invented:
 - Off-session/merchant-initiated (MIT) charging of a previously-saved `payment_method_id` from a
   mobile context is not covered on the fetched flow pages (only the on-session, customer-present
   save/reuse flow is) (§5).
-- Exact webhook retry cadence (minute-by-minute schedule) for Orchestration is not itemised the way
-  Payments API v2's is; the page says "24-hour retry with escalating intervals" only.
+- Actual webhook delivery timing under failure was not tested; §7 records the published cadence,
+  not a delivery guarantee verified against a merchant environment.
 - Whether Peach's AOC/PCI scoping statement for V1 ("mobile SDK is NOT covered") also applies
   unchanged to V2 was not found on a V2-specific page — don't assert it either way without asking
   Peach.
@@ -407,18 +439,23 @@ Documented honestly as gaps rather than invented:
   build, confirm whether the native sheet surfaces M-PESA in sandbox, or drive it through the Web SDK /
   a server-side redirect. `[VERIFY-SANDBOX — native sheet only]`
 - **Capture amount vs authorised**: now documented (`docs/manage-transactions`, `orchestration-api.md`
-  §6). `amount_to_capture` may be **less** than authorised — the difference is released to the customer
-  and the status becomes `partially_captured`. Capturing **more** than authorised needs **overcapture**,
+  §6). `amount_to_capture` may be less than authorised and the status can become `partially_captured`.
+  Remaining-hold release depends on connector support and the capture mode; verify it before promising
+  an immediate release, especially with multiple captures. Capturing **more** than authorised needs **overcapture**,
   a separate opt-in PSP capability set at create time (`enable_overcapture:true`), not something you can
   just exceed. Capture is final (undo = refund); an unused authorisation is released by voiding
   (`POST /payments/{id}/cancel`, pre-capture only). `[DOCS]`
-- **Per-entity method discovery**: there is no documented pre-flight "which methods are enabled for
-  this entity / PaymentIntent" query. Availability is resolved at RUNTIME (merchant-enabled +
-  connector returns a session token + device supports it) and surfaced through the readiness
-  callbacks (§4) — enumerate by observing readiness, not by a discovery endpoint. `[VERIFY-SANDBOX]`
+- **Native runtime availability:** merchant/customer method-list APIs in `orchestration-api.md`
+  do not establish wallet readiness on a particular device. Use the native readiness callbacks (§4)
+  and verify the selected connector/device; distinguish configured methods from methods ready to use.
 
 ## Sources
-All `[DOCS]`-tagged facts above were fetched 2026-09-08 from:
+The base reference was fetched on 2026-09-08. The four platform guide sections and release
+notes were compared with the fresh official `llms-full.txt` on **2026-10-07**. Package names,
+versions, Android minimum conflict, and October behavior changes above were updated from
+that review. The on-session/recurring distinction and published webhook retry cadence were also
+checked against the current flow pages on 2026-10-07. This does not claim that every older flow or legacy SDK fact was independently
+retested. Sources:
 - https://playground.peachpayments.com/sdk-mobile/ios (+ `.md`)
 - https://playground.peachpayments.com/sdk-mobile/android (+ `.md`)
 - https://playground.peachpayments.com/sdk-mobile/react-native.md

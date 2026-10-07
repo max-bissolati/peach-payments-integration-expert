@@ -1,5 +1,15 @@
 # Recurring payments and tokenisation
 
+
+**Advice-code scope, checked 2026-10-07:** current Dashboard documentation separates Mastercard
+and Visa advice tables. A bare numeric `MerchantAdviceCode` is not a universal retry instruction.
+Resolve the network and connector before applying the older Mastercard-style mappings below or
+calling the helper. For example, Mastercard `03` is no-retry, while Visa `03` means invalid merchant
+in a limited-retry category. Unknown provenance means stop and review, not automatic retries or
+mandate cancellation. `map-result-code.js` / `decode-result.js` retain legacy advice mappings and
+are not network-aware decision engines.
+[Current tables](https://playground.peachpayments.com/docs/dashboard-transactions).
+
 ## When to load
 
 Anything subscription/recurring-related, storing cards, one-click checkout, charging a saved card,
@@ -51,8 +61,7 @@ handles the retry" is wrong — build the loop (`playbooks/subscriptions.md`).
 ### One-click (shopper present — still a CIT)
 
 Pass the stored `registrationId`/`cardTokens` on a normal checkout with
-`standingInstruction: { source: "CIT", mode: "REPEATED", type: "UNSCHEDULED" }`. No CVV/3DS
-needed beyond the session's own authentication.
+`standingInstruction: { source: "CIT", mode: "REPEATED", type: "UNSCHEDULED" }`. Do not store CVV or assume token reuse removes 3DS. Follow the selected product's session authentication and any challenge requirements.
 
 ### Merchant-initiated (MIT) — the recurring debit
 
@@ -144,19 +153,15 @@ even for declined refunds — check `result.code`.** `[PLUGIN-VERIFIED]`
 **Declined-but-held funds**: a failed or abandoned authorisation can leave an issuer-side hold the shopper sees on their bank app. A hold is NOT a capture — never refund (`RF`) it (nothing was captured); to release proactively, reverse the PA (`RV`) inside the 7-day window; otherwise the issuer releases it automatically (Peach docs publish no timeline — treat "how long" as issuer-dependent and reassure the shopper accordingly).
 PA + reverse is the zero-settlement way to verify a live integration (`playbooks/go-live.md`).
 
-## Network tokens (optional, stronger)
+## Network tokenisation
 
-Issuer-manained card-format tokens (`654321XXXXXX7890`) replacing the registration token for
-card-brand rails: auto-updates (some expiry changes), dynamic cryptogram, silent 3DS, ~10bps Visa
-interchange benefit. Behavior: a MIT on an existing registration can auto-provision one
-(`paymentType: TK` provisioning / `TF` fetch transactions appear; `800.100.311` = token request
-in-flight — retry later). Proactive: `POST /v1/registrations/{registrationId}` with
-`createOmniToken=true`. `card.bin` keeps returning the ORIGINAL PAN BIN (network-token BIN
-differs — don't alert on BIN changes). Errors `100.350.317` (already requested) / `.318`
-(not enabled). Test cards are expiry-keyed: xx/2031 valid, 2034 full lifecycle, 2035 card-update
-(see `testing-and-go-live.md`). Cryptogram rule: if the CIT was authorized with the network token,
-MITs need no cryptogram; if the CIT used the real PAN, the first token-MIT must include one.
-Enable via support/scheme onboarding.
+Read `network-tokenisation.md` for product selection, provisioning, cryptograms, lifecycle and
+portability. In the classic managed flow, the merchant can continue using `registrationId` while
+Peach provisions or selects a scheme token behind it. These are different identifiers.
+Network tokens do not guarantee frictionless 3DS, approval, a fixed fee saving or migration
+between PSPs. Current documentation has inconsistent proactive-provisioning examples; use the
+source comparison and verification checklist in that reference instead of guessing an endpoint.
+
 
 ## Design checklist for the billing loop you own
 

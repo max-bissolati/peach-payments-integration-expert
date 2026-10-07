@@ -1,5 +1,10 @@
 # Payment methods catalog (capability matrix)
 
+Current scope: the [classic methods matrix](https://developer.peachpayments.com/docs/pp-payment-methods)
+explicitly excludes Orchestration. Verify Orchestration at its
+[payment-methods page](https://playground.peachpayments.com/operate/payment-methods).
+PayJustNow changes below were checked on 2026-10-07; other rows retain their recorded provenance.
+
 ## When to load
 Load for any "can method X do Y?" question: refunds (full/partial/none/one-only), recurring, country/currency, available surfaces, min/max limits, bank coverage. For per-method request parameters see `payments-api.md`; for test data see `testing-and-go-live.md`; for method-availability changelog flags see `payments-api.md`.
 
@@ -21,7 +26,7 @@ Country/currency: SA=ZAR, KE=KES, MU=MUR; PayPal settles USD/GBP/EUR (Checkout `
 | ZeroPay (BNPL) | `ZEROPAY` | Ch, PA, L, PP, Ext | **Not refundable** | No | Min R30. Sandbox: ID `9512235170089`, OTP `00000` |
 | Float | `FLOAT` | Ch, PA, L, PP, Ext | Full + partial | No | R1–R99,000. Whole rands in sandbox |
 | Happy Pay (BNPL) | `HAPPYPAY` | Ch, PA, L, PP, Ext | Full + partial | No | Sandbox registration: qa.happypay.co.za/register_test |
-| PayJustNow (BNPL) | (no v2 brand) | **Mobile SDK V2 + POS only** | POS refunds only | No | Not on Checkout/PA/Links — don't promise it for web integrations |
+| PayJustNow (BNPL) | `PAYJUSTNOW` (Checkout webhook brand, not classic Payments API enum) | **Embedded + Hosted Checkout, POS**; Orchestration has its own catalogue | Full + partial per current classic matrix | No | Checkout requires `customer.email`; added 2026-10-01 |
 | Scan to Pay (was Masterpass) | `MASTERPASS` | Ch, PA, L, PP, Ext | **Full refunds only** | No | **Not to debit cards.** Debit-card reversal ≤6h via Scan to Pay service; mTxId ≤45 chars |
 | Apple Pay | (Checkout wallet) | Ch (Express + standard), Ext, Links, S2S/SDK | Full + partial | Wallets DB-only tokenisation (2026-08-27) | Merchant needs FNB/Nedbank/Std Bank account; domain-association file + support activation |
 | Google Pay | (Checkout wallet) | Ch (Express + standard), Ext | Full + partial | Wallets DB-only tokenisation | Merchant needs Absa/FNB/Nedbank/Std Bank account + Google signup |
@@ -115,7 +120,7 @@ Per-method request bodies for the Payments API (PayShap bank enum + phone format
 | Full + partial refunds | Cards, Payflex, Float, Happy Pay, Apple/Google/Samsung Pay, PayPal, 1Voucher, Mobicred, RCS, MoneyBadger (≥R25) |
 | Full refunds only | Scan to Pay (`MASTERPASS`) |
 | One refund per transaction (partial blocks the rest) | PayShap |
-| POS device only | PayJustNow |
+| PayJustNow | Embedded and Hosted Checkout plus POS; no classic Payments API brand |
 | No API refund (skill summary of the docs' per-method ❌ Refunds cells — not a docs-quoted bucket) → manual EFT off-platform | ZeroPay, Peach EFT, Capitec Pay, Absa Pay, Pay by Bank, M-PESA, blink by Emtel, MCB Juice, MauCAS |
 
 ## Not callable on Payments API v2 (and what to use)
@@ -125,7 +130,7 @@ Per-method request bodies for the Payments API (PayShap bank enum + phone format
 | Apple/Google/Samsung Pay | Not in the Payments-API-v2 enum — S2S/OPPWA + Checkout surfaces only `[DOCS]` | Checkout (incl. Embedded Express), extensions |
 | PayPal | Not in the v2 enum | Hosted Checkout, Links, extensions, POS |
 | Pay by Bank | Checkout bundle, not a brand | Embedded/Hosted Checkout |
-| PayJustNow | Not in the v2 enum | Mobile SDK V2, POS |
+| PayJustNow | Not in the classic Payments API v2 enum | Embedded/Hosted Checkout, POS; verify Orchestration separately |
 | A+ (APLUS) | No Payments API support | Checkout surfaces |
 
 ## Bank-coverage notes
@@ -140,10 +145,10 @@ Per-method request bodies for the Payments API (PayShap bank enum + phone format
 - M-PESA `"199.99"` → on the Payments API the request fails (integers only); Checkout rounds it up
   to `"200"` automatically. Either way, show the shopper the rounded amount.
 - Assuming ZAR works for PayPal → it doesn't (USD/GBP/EUR only).
-- Assuming PayJustNow is available on Checkout → Mobile SDK V2 + POS only.
+- PayJustNow became available on Embedded/Hosted Checkout on 2026-10-01; older POS-only advice is stale.
 - Hard-matching brand names across surfaces (docs, enums, invoices, extensions all differ) → map by capability, not by string.
 - Wallet tokenisation ≠ card tokenisation: wallets are DB-only repeats since 2026-08-27; card registrations (`createRegistration`) carry Visa/MC/Amex/Diners only.
 - High-risk merchant overrides (Capitec verified-ID, Absa PEACHEFT array) silently differ from the standard integration — confirm merchant risk class before finalising parameter validation.
 - Amount limits are method-enforced, not API-enforced: Payflex R10–R50k, ZeroPay min R30, Float R1–R99k, PayShap per-bank caps — a value valid for one brand 400s on another; validate per selected brand before submitting.
 - Shopify refunds happen in the Shopify dashboard, not Peach; Wix/Ecwid/nopCommerce/OpenCart plugins can't refund at all — don't build merchant expectations on plugin-level refunds.
-- POS device: available in **South Africa and Mauritius**; it supports all Hosted Checkout payment methods (it can present payment links). PayJustNow is POS-supported in SA — but still POS-only for refunds.
+- POS in this catalogue describes the broad product offering, not the REST/Intent method contract. Current integration guides cover South African Sunmi card payments; see `pos-integrations.md` before promising other countries or API-driven QR/PayByLink.

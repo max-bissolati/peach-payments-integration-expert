@@ -1,5 +1,14 @@
 # Payments API (server-to-server v2)
 
+
+**Routing update, verified 2026-10-07:** Peach now recommends Orchestration for new custom online
+integrations. Existing classic Checkout/Payments API integrations remain documented; do not relabel
+that guidance as an announced shutdown or force a migration during unrelated maintenance.
+Read `sdk-web.md` and `orchestration-api.md` for new builds. Sources:
+[product portfolio](https://developer.peachpayments.com/docs/product-portfolio-overview),
+[Checkout overview](https://developer.peachpayments.com/docs/checkout-overview),
+[Payments API overview](https://developer.peachpayments.com/docs/payments-api-overview).
+
 ## When to load
 Load for: accepting non-card payment methods without Checkout's hosted UI (custom flows you render yourself), integrating a specific `paymentBrand` (PayShap, Capitec Pay, Peach EFT, 1Voucher, M-PESA, RCS, ...), implementing refunds/status queries against API-originated payments, or consuming Payments API encrypted webhooks. For Checkout-originated payments use the Checkout refund endpoint instead; for capability matrices see `methods-catalog.md`.
 

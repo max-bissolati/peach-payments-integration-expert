@@ -13,8 +13,8 @@ migration mapping. Orchestration is a white-labelled Hyperswitch surface.
 
 You create a payment intent with `POST /payments` and either confirm it server-side (`confirm:true`, you
 hold the credential — S2S) or defer confirmation to an SDK (`confirm:false`, return the `client_secret` —
-`sdk-web.md`/`mobile.md`). Money is authorised then captured; captures can be full, partial (releases the
-difference) or, with an opt-in, over the authorised amount. Refunds run against captured money. Saved
+`sdk-web.md`/`mobile.md`). Money is authorised then captured; captures can be full, partial (remaining-hold behavior depends on the connector and capture mode),
+or, with an opt-in, over the authorised amount. Refunds run against captured money. Saved
 credentials and mandates drive merchant-initiated recurring. **Amounts are integer minor units**, auth is a
 merchant `api-key`, and outcomes are confirmed by webhook + `GET /payments/{id}`, never by the client.
 
@@ -40,7 +40,7 @@ merchant `api-key`, and outcomes are confirmed by webhook + `GET /payments/{id}`
 | Endpoint | Purpose | Key request fields |
 |---|---|---|
 | `POST /payments` | Create a payment intent | `amount`, `currency`, `confirm`, `capture_method`, `authentication_type`, `payment_method`/`_type`/`_data`, `return_url`, `customer_id`, `setup_future_usage`, `mandate_data`, `recurring_details`, `off_session` |
-| `POST /payments/{id}/confirm` | Confirm an intent created with `confirm:false` | `client_secret` |
+| `POST /payments/{id}/confirm` | Confirm an intent created with `confirm:false` | With merchant secret API-key auth, send payment method/data as needed, not `client_secret`; client SDK auth is a separate flow |
 | `POST /payments/{id}/capture` | Capture an authorised (manual-capture) payment | `amount_to_capture` (optional; must be ≤ current `amount_capturable`; full amount if omitted), `refund_uncaptured_amount` |
 | `POST /payments/{id}/cancel` | **Void** a pre-capture authorisation | `cancellation_reason` |
 | `POST /payments/{id}/cancel_post_capture` | Cancel after capture (valid on `succeeded` / `partially_captured` / `partially_captured_and_capturable`) | `cancellation_reason`. How this differs operationally from a refund is not spelled out in prose — `[VERIFY-SANDBOX]` |
@@ -55,6 +55,16 @@ merchant `api-key`, and outcomes are confirmed by webhook + `GET /payments/{id}`
 `[DOCS playground; openapi paths + PaymentsCaptureRequest / PaymentsCancelRequest / RefundRequest]`
 Customers, payment methods, and mandates have their own endpoint groups — §8–§10.
 
+The current [confirm reference](https://playground.peachpayments.com/playground) explicitly
+says not to send `client_secret` with a secret API key (reviewed 2026-10-07). A schema listing an
+optional field does not make it appropriate for every authentication mode.
+
+Payment creation documents `payment_id` for idempotency; refunds document `refund_id`. Both are
+constrained to 30 characters in the current schema, while refund prose also recommends UUIDv4.
+Persist an ID before dispatch, use it for only one immutable operation, and verify the conflicting
+refund-length advice and duplicate semantics in sandbox. Do not assume every endpoint shares these
+idempotency rules. See `playbooks/orchestration-build.md` for recovery and acceptance cases.
+
 ## 3. The create / confirm request shape
 
 - `payment_method` (`card`, `wallet`, `network_token`, `bank_transfer`, `bank_redirect`, `real_time_payment`,
@@ -66,6 +76,12 @@ Customers, payment methods, and mandates have their own endpoint groups — §8�
   last three are named in the schema but not explained in prose — `[VERIFY-SANDBOX]` for their exact
   semantics. `[DOCS openapi CaptureMethod]`
 
+Current server-to-server card and save-card examples include `browser_info` with shopper device,
+IP, user agent, language, timezone and screen fields. Collect actual client context and follow the
+selected connector's requirements; do not copy the documentation's sample IP or browser values.
+This example change was reviewed on 2026-10-07 and does not make every listed field universally
+required. [Card flow](https://playground.peachpayments.com/flows/server-to-server-card).
+
 ### Card (PAN) — heaviest PCI scope
 ```json illustrative
 "payment_method": "card",
@@ -76,7 +92,7 @@ Customers, payment methods, and mandates have their own endpoint groups — §8�
 }}
 ```
 
-### Network token — lower scope (surrogate + single-use cryptogram)
+### Network token: surrogate plus cryptogram
 ```json illustrative
 "payment_method": "network_token",
 "payment_method_type": "network_token",
@@ -89,21 +105,22 @@ Customers, payment methods, and mandates have their own endpoint groups — §8�
 is single-use per authorisation. The connector must be configured for network tokens or routing returns
 *"No eligible connector was found"*. `[DOCS integrate/api-only]`
 
-### Wallet passthrough (Apple/Google/Samsung Pay) — lowest scope
+### Wallet passthrough (Apple/Google/Samsung Pay)
 All three use `"payment_method": "wallet"` with the brand as `payment_method_type`; you forward an encrypted
 payload and never decrypt it. Google Pay needs the `PAYMENT_GATEWAY` tokenization type (`DIRECT` is a
 different integration). A bad/expired payload declines with *"card properties must be set"* → `200.300.404`.
 All three settle on card rails, so refunds behave like card refunds. `[DOCS integrate/api-only]`
 
-### PCI scope by credential (verbatim from the docs)
-| Credential | `payment_method` | You hold | Your PCI scope |
-|---|---|---|---|
-| Card (PAN) | `card` | number, expiry, name, CVC | Highest — cardholder data *and* SAD |
-| Network token | `network_token` | token + cryptogram | Lower — surrogate restricted to you |
-| Apple/Google/Samsung Pay | `wallet` | an encrypted payload | Lowest — opaque, forward-only |
+### Credential handling and PCI scope
 
-Raw-card S2S puts your systems in PCI scope (`pci-security.md`). Prefer the SDK/hosted surfaces unless you
-have been assessed for card capture. `[DOCS integrate/api-only]`
+Raw card-backed credentials in a server-to-server flow remain in PCI scope. Token and expiry
+handling, cryptograms and encrypted wallet payloads have different exposures; none gives a
+blanket exemption. The current API-only guide identifies network token plus expiry as cardholder
+data and the cryptogram as sensitive authentication data. Do not retain cryptograms after
+authorisation. Confirm token-requestor onboarding and PCI obligations with Peach and the assessor.
+Prefer SDK/hosted collection unless the merchant has an assessed reason to handle credentials.
+See `network-tokenisation.md` for token types and authentication/lifecycle boundaries.
+[Current API-only guide](https://playground.peachpayments.com/integrate/api-only), checked 2026-10-07.
 
 ## 4. Flow shapes and `next_action`
 
@@ -137,7 +154,7 @@ do not parse, rewrite, or append to it (its shape is internal and will change). 
 
 - **All alternative methods are automatic-capture only** (manual capture/void are rejected) and **CIT-only**
   (only card-backed credentials can be stored and charged as an MIT). `[DOCS integrate/api-only]`
-- Per-method market + refund support (from `operate/customers`): `[DOCS operate/customers]`
+- Per-method market + refund support (from `operate/payment-methods`): `[DOCS operate/payment-methods]`
 
   | Method | Market | Refunds |
   |---|---|---|
@@ -145,7 +162,7 @@ do not parse, rewrite, or append to it (its shape is internal and will change). 
   | PayShap | ZA | ✅ **one refund only** |
   | Peach EFT, Capitec Pay | ZA | ❌ |
   | Payflex, Float, Happy Pay, Mobicred, RCS | ZA | ✅ full/partial |
-  | PayJustNow | ZA | ⚠️ **POS only** (no eCommerce refund yet) |
+  | PayJustNow | ZA | Full or partial, current payment-methods docs checked 2026-10-07 |
   | ZeroPay | ZA | ❌ |
   | Apple Pay (ZA/ZAR; MU/MUR,USD), Google Pay (ZA), Samsung Pay (ZA) | ZA/MU | ✅ full/partial |
   | Scan to Pay | ZA | ✅ **full only** (no debit-card refunds; debit reversals within 6h) |
@@ -161,7 +178,10 @@ do not parse, rewrite, or append to it (its shape is internal and will change). 
 
 `[DOCS docs/manage-transactions]`
 - **Capture** takes the held funds and settles you. You can capture the **full authorised amount or less** —
-  capturing less **releases the difference** back to the customer (status → `partially_captured`). Captures
+  the manage-transactions guide describes release of the difference on partial capture (status
+  `partially_captured`), but the schema marks `refund_uncaptured_amount` incompletely supported and
+  connector-dependent. Verify final versus multiple capture semantics before promising immediate
+  release of the balance. Captures
   are **final** (undo = refund).
 - **Overcapture** (capturing *more* than authorised) is a **separate opt-in PSP capability** requested on the
   original payment via `enable_overcapture: true` — not a capture-time parameter. `[DOCS openapi PaymentsCreateRequest.enable_overcapture]`
@@ -193,7 +213,7 @@ behaviour documented). `[DOCS openapi PaymentsCreateRequest]`
   `GET /customers/{id}`, `POST /customers/{id}` (partial update), `DELETE /customers/{id}`, `GET /customers/list`.
 - `CustomerRequest`: `customer_id` (autogenerated if omitted; returned like `cus_…`), `name`, `email`, `phone`,
   `phone_country_code`, `description`, `address` (`AddressDetails`), `metadata` (≤50 keys), `tax_registration_id`.
-  The response also carries `default_payment_method_id`. `[DOCS openapi Customer*; operate/customers]`
+  The response also carries `default_payment_method_id`. `[DOCS openapi Customer*; operate/payment-methods]`
 
 ## 9. Payment-method vault
 
@@ -203,17 +223,17 @@ behaviour documented). `[DOCS openapi PaymentsCreateRequest]`
   `POST /{customer_id}/payment_methods/{id}/default` (set default).
 - `GET /customers/payment_methods` is the **client-facing** "what can this shopper pay with" lookup — it is
   authenticated by the **publishable key** and a `client_secret` query param, not the merchant `api-key`. Do
-  not confuse it with the merchant-side `GET /account/payment_methods`. `[DOCS openapi; operate/customers]`
+  not confuse it with the merchant-side `GET /account/payment_methods`. `[DOCS openapi; operate/payment-methods]`
 - Saved methods come back as `pm_…` ids. (Some OpenAPI examples show a `card_…` id; `pm_…` is the form used in
   the customer-scoped responses and all doc prose — prefer it.)
 
 ## 10. Mandates, recurring and MIT
 
 ### 10.1 The two vault models
-- **Vault-with-us / payment_method_id** — simpler, weaker dispute protection, no formal limit. Save with
+- **Vault-with-us / payment_method_id** — saved-method reference without the mandate amount-limit model. Save with
   `setup_future_usage:"off_session"` + a `customer`; charge with
   `recurring_details:{ "type":"payment_method_id", "data":"pm_…" }`. `[DOCS flows/recurring-pm]`
-- **Mandate** — formal, dispute-protected, with an enforced maximum. `[DOCS flows/recurring-payments]`
+- **Mandate**: a formal consent and amount-limit model. It does not make a charge immune to disputes. `[DOCS flows/recurring-payments]`
 
 ### 10.2 Mandates
 - Create by passing `mandate_data` on a payment: `customer_acceptance` (`acceptance_type` `online`/`offline`;
@@ -226,14 +246,14 @@ behaviour documented). `[DOCS openapi PaymentsCreateRequest]`
 - Doc guidance (not API-enforced): set the mandate max ~20–30% above the highest expected charge, and keep
   proof of customer acceptance (recurring-compliance narratives reference ≥18 months). `[DOCS flows/recurring-payments]`
 
-### 10.3 CIT → MIT (always two payments)
+### 10.3 Customer-present setup followed by MIT
 The customer's acceptance must be captured while they are present, so an MIT is never a single call:
 1. **CIT (present)**: `POST /payments` with `setup_future_usage:"off_session"`, `customer` (+ id), and either
    `mandate_data` (mandate model) or nothing beyond `setup_future_usage` (payment_method_id model),
    `authentication_type:"three_ds"`. The response yields `payment_method_id` (and `mandate_id` for the mandate
    model). The vault-with-us setup **must complete** or the credential is not chargeable.
 2. **MIT (absent)**: `POST /payments` with `amount`, `currency`, `confirm:true`, `off_session:true`,
-   `customer_id`, and the `recurring_details` reference — no payment-method data, no shopper, no auth.
+   `customer_id`, and the `recurring_details` reference — no raw payment-method data for this vaulted-reference variant and no shopper present. Handle authentication-required failures with customer-present recovery.
    `[DOCS integrate/api-only, flows/recurring-payments]`
 
 `recurring_details` is the single field for referencing any stored credential — **`payment_method_id` is NOT a
@@ -242,7 +262,7 @@ top-level field on `POST /payments`** (sending it there is rejected). Documented
 `network_transaction_id_and_network_token_details` (own-vault token), `card_with_limited_data`. (The schema also
 carries `network_transaction_id_and_decrypted_wallet_token_details`, but its body is unspecified in the spec —
 treat as not-yet-released.) For own-vault variants, the `network_transaction_id` from the original CIT is the
-proof of cardholder consent and must be carried forward. `[DOCS integrate/api-only; openapi RecurringDetails]`
+scheme linkage to the original transaction and must be carried forward. Retain customer consent evidence separately. `[DOCS integrate/api-only; openapi RecurringDetails]`
 
 ### 10.4 Zero-auth (validate a card, no funds held)
 `amount:0` + `capture_method:"manual"` + `setup_future_usage:"off_session"` + `currency` (still required) +
@@ -254,10 +274,10 @@ zero-auth does **not** require `mandate_data`. `[DOCS flows/zero-auth, flows/rec
 ### 10.5 Gateway-agnostic MIT
 One saved `payment_method_id` can be charged across **PeachPayments, ACI, and Cybersource**, with automatic
 connector-fallback on soft decline and the authorisation-chain data carried automatically. The charge shape is
-the ordinary payment_method_id MIT. The **verified enable mechanism** is the business-profile field
+the ordinary payment_method_id MIT. The schema documents the business-profile field
 `is_connector_agnostic_mit_enabled` set via `POST /account/{account_id}/business_profile/{profile_id}`. (The
 doc pages also show `POST …/toggle_connector_agnostic_mit {"enabled":true}`, but that path is absent from the
-OpenAPI spec — prefer the profile field; treat the toggle path as `[VERIFY-SANDBOX]`.) `[DOCS gateway-agnostic, flows/gateway-agnostic-mit; openapi ProfileResponse]`
+OpenAPI spec. This is a source discrepancy, not proof either administrative operation is enabled for the merchant. Confirm the authorized configuration path and test it in sandbox before changing a shared profile. `[VERIFY-SANDBOX]`) `[DOCS gateway-agnostic, flows/gateway-agnostic-mit; openapi ProfileResponse]`
 
 ## 11. Payment states and webhooks
 
@@ -289,6 +309,9 @@ Branch payment logic on `IntentStatus`. `[DOCS openapi IntentStatus/AttemptStatu
 - The webhook-delivery-log endpoints (`POST /events/profile/list`,
   `GET /events/{merchant_id}/{event_id}/attempts`, `POST /events/{merchant_id}/{event_id}/retry`) require a
   **Dashboard session**, not a merchant `api-key` (they return `IR_04`/`IR_01` otherwise). `[DOCS operate/webhooks]`
+- The current `/flows/webhooks` page documents retries at 1 minute, 5 minutes, 10 minutes,
+  1 hour, 6 hours and 24 hours. This is documentation, not observed delivery timing; tolerate
+  duplicate, delayed and out-of-order events. Reconcile gaps after the retry window.
 - **Operational**: status queries are rate-limited to **2/min per transaction** (poll ~30s apart; a
   rate-limited sync keeps the current status rather than failing). `800.900.201` "unknown channel" = the
   Entity ID is not enabled for that brand (a provisioning issue, not a request bug). `[DOCS integrate/api-only]`

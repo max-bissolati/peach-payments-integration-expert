@@ -42,7 +42,7 @@ curl "https://reconciliation.peachpayments.com/api/merchants/{merchantId}/transa
   -H "Authorization: Bearer $ACCESS_TOKEN"
 ```
 
-Response fields worth using (NOTE: the documented response does **not** include `merchantTransactionId` — join recon rows to your orders via `uniqueId`/`transactionId`, which you must store at fulfilment time from `/status` or the success webhook): `batchNumber`, `uniqueId`, `transactionId`, card `last4`/`bin`, `paymentType`/`paymentMethod`/`paymentBrand`/`cardType`, credit/debit, **`amount` (includes `tipAmount`)**, **`settledAmount`** (what actually settled, net of adjustments — ⚠️ Peach-settled/aggregation accounts ONLY; **direct-settled (ISO) accounts have no `settledAmount` and reconcile on `amount`**), `settlementStatus`, **`settlementReference`** (matches the deposit line on your bank statement), `peachResult` (**status enum** `successful|failed|cancelled|pending` per the OpenAPI schema — NOT the numeric result code; numeric codes come from `/status`/webhooks), `rrn`. `tipAmount` was added 2026-06-30 for POS merchants and is `null` when not applicable.
+Response fields worth using (NOTE: the documented response does **not** include `merchantTransactionId` — join recon rows to your orders via `uniqueId`/`transactionId`, which you must store at fulfilment time from `/status` or the success webhook): `batchNumber`, `uniqueId`, `transactionId`, card `last4`/`bin`, `paymentType`/`paymentMethod`/`paymentBrand`/`cardType`, credit/debit, **`amount` (includes `tipAmount`)**, **`settledAmount`** (what actually settled, net of adjustments — ⚠️ Peach-settled/aggregation accounts ONLY; **direct-settled (ISO) accounts have no `settledAmount` and reconcile on `amount`**), `settlementStatus`, **`settlementReference`** (provider settlement reference; bank description can be customized), `peachResult` (**status enum** `successful|failed|cancelled|pending` per the OpenAPI schema — NOT the numeric result code; numeric codes come from `/status`/webhooks), `rrn`. `tipAmount` was added 2026-06-30 for POS merchants and is `null` when not applicable.
 
 **Response envelope + paging**: the documented response is a **flat JSON array** of transaction objects
 (no `data`/`meta` wrapper), and errors come back as `{ "message": "...", "errors": { "<field>": ["..."] } }`
@@ -141,3 +141,24 @@ payout-funding behaviour, and auditors will ask.
 - Treating `NOK` as "not billed" for cards/PayPal — they bill on both `ACK` and `NOK`.
 - Dashboard recon assumed for all methods — it's cards-only and 4 acquirers only; everything else goes through Settlements pages or the Recon API.
 - Treating the S2S `CB`/`CR` endpoints as a dispute feed — they only record/contest chargebacks you already know about; incoming disputes reach you via `000.100.2xx` codes and webhooks, and the evidence workflow/timeframes are undocumented (see `Disputes and chargebacks` above) — coordinate disputes with Peach support.
+
+## Current Dashboard qualifications
+
+The current Orchestration Dashboard supports a custom settlement deposit reference. Do not assume
+API `settlementReference` always equals the bank statement description; match using merchant,
+settlement data, date and amount as well. [Settings](https://playground.peachpayments.com/docs/dashboard-settings).
+
+Billing docs disagree in scope: the classic developer guide explicitly bills cards and PayPal on
+both ACK and NOK, while the current Orchestration settlement guide says cards on ACK/NOK and other
+methods on ACK only. Preserve the product distinction and confirm PayPal billing under the merchant's
+actual agreement; do not silently apply one page's rule to every account.
+[Orchestration settlement and billing](https://playground.peachpayments.com/docs/settlement-and-billing).
+These qualifications were checked on 2026-10-07.
+
+## POS correlation
+
+For terminal payments, keep the POS transaction UUID used for refunds separate from your order
+reference. POS guides say `posData.merchantTransactionId` appears in Reconciliation API
+`transactionId`; the generic recon schema's hex-style description does not justify rejecting
+non-hex order references. Use explicit timezone offsets and verify the actual UAT records.
+See `pos-integrations.md` for webhook, polling and fallback recovery.

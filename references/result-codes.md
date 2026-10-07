@@ -1,9 +1,23 @@
 # Result codes — reading outcomes and mapping them safely
 
+
+**Advice-code scope, checked 2026-10-07:** current Dashboard documentation separates Mastercard
+and Visa advice tables. A bare numeric `MerchantAdviceCode` is not a universal retry instruction.
+Resolve the network and connector before applying the older Mastercard-style mappings below or
+calling the helper. For example, Mastercard `03` is no-retry, while Visa `03` means invalid merchant
+in a limited-retry category. Unknown provenance means stop and review, not automatic retries or
+mandate cancellation. `map-result-code.js` / `decode-result.js` retain legacy advice mappings and
+are not network-aware decision engines.
+[Current tables](https://playground.peachpayments.com/docs/dashboard-transactions).
+
 ## When to load
 
 Mapping `result.code` to order/subscription state, handling a failed/declined payment, building a
 status mapping for any framework, or reviewing why an integration mis-classifies outcomes.
+
+POS does not use these numeric `result.code` families. Use `pos-integrations.md` for
+`transactionResult`, numeric webhook transaction types, and Intent callback success checks.
+Orchestration also uses its own status model (`orchestration-api.md`).
 
 ## Format and where the truth lives
 

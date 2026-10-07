@@ -1,5 +1,10 @@
 # Playbook — "I need subscriptions / recurring billing"
 
+
+This playbook's endpoint examples cover classic saved-card billing. For a new Orchestration
+integration, read `orchestration-build.md` and `../orchestration-api.md` instead; do not send
+`registrationId` or classic `standingInstruction` fields to the Orchestration API.
+
 ## When to load
 
 The user says subscription, recurring, retainer, instalments-from-a-wallet, "charge them every

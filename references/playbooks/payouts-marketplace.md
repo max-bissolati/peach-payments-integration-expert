@@ -58,7 +58,7 @@ Headers `webhook-id`/`webhook-timestamp` (+ signature) — verify with **Svix li
 ## Failure handling
 
 - **Failed payouts incur fees AND return the value to the float** — model both in the ledger; a failed payout is not free and not lost.
-- State machine: `pending → processing → successful | failed | cancelled | reversed`. Idempotent retry uses the SAME `payoutId`; a changed payee account gets a NEW payoutId after re-BANV.
+- State machine: `pending → processing → successful | failed | cancelled | reversed`. For uncertain creation, recover using `GET /merchants/{merchantId}/payouts/status?payoutId={payoutId}`; an initial 404 is not permission to retry. Duplicate create IDs are rejected. A confirmed safe new submission uses a new ID; a changed payee account requires re-BANV.
 - **RTC dark-hours limits**: business hours 00:00–16:00 cap R5M; 16:00–00:00 + weekends/holidays cap R250k — schedule large runs inside business hours.
 - Result-code families (4-digit first group): `001` technical, `002` processing (`2900.000.003`), `003` invalid input, `004` request, `005` security. Success `2000.000.000`; `2001.002.106` no account at bank; `2900.002.001` unfunded float; `2900.005.002` IP not allowlisted.
 

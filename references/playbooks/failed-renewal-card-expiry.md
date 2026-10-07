@@ -10,11 +10,12 @@ with an issuer decline. This is the scenario most integrations forget until chur
 
 Stored-card debits fail when the physical card expires (you can see it coming — you stored
 `card.expiryMonth/Year`) or is replaced (fraud reissue, bank migration — expiry may even stay the
-same while the PAN changed; that's what network tokens solve). Peach will keep accepting your MIT
-attempts and the issuer will keep declining them (`800.100.*`, often with
-`MerchantAdviceCode 01` = new account information available). Nobody at Peach updates the card for
-you. The fix is always the same shape: **get the customer to re-enter card details on a Peach
-surface, capture a fresh `registrationId`, swap it in, resume.**
+same while the PAN changed). Enabled network-token or updater services can help, but do not guarantee
+recovery; inspect the actual credential lifecycle before prompting for a new card. Numeric advice
+codes require network/connector context (`../result-codes.md`). When fresh credentials are needed,
+use a hosted customer-present recovery flow. Classic integrations receive a new `registrationId`;
+Orchestration uses its saved-method/mandate contract. Resume only with consent and verified setup.
+See `../network-tokenisation.md`. The detailed flow below covers classic registration-based billing.
 
 ## Decision tree
 

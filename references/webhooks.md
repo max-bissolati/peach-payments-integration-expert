@@ -6,6 +6,14 @@ Implementing or debugging ANY webhook endpoint for Peach (Checkout, Payment Link
 designing idempotent webhook processing, or deciding what a webhook may be trusted to do. If you
 need to verify a payload right now: `scripts/verify-webhook.js`.
 
+## Select the webhook product first
+
+This file's opening doctrine and Scheme A/B helpers apply to classic Checkout. For POS, read
+`pos-integrations.md`: JSON payloads, configured custom-header authentication, operation-specific
+success and correlation, REST polling or Intent recovery. Do not call Checkout status with POS IDs,
+require nonexistent POS HMAC headers, or assume Checkout's retry schedule. Orchestration and
+Payments API have their own sections below.
+
 ## The doctrine (read this first)
 
 1. **A webhook is a wake-up call, not a source of truth.** Verify its signature, then re-fetch
@@ -165,7 +173,8 @@ its own file only.
   `dispute_*`**, 2 `mandate_*`, 7 `payout_*`, `invoice_paid` (no `subscription_*`). Config lives on the
   **business profile** (`webhook_details`; status lists use `succeeded`/`failed`, not `success`/`failure`).
   The delivery-log/retry endpoints (`/events/...`) need a **Dashboard session**, not the merchant `api-key`.
-  Full detail: `orchestration-api.md` §11.2 (and `mobile.md` §7 for the SDK view).
+  The current flow page documents retries at 1m, 5m, 10m, 1h, 6h and 24h; do not reuse classic
+  Checkout's 30-day schedule. Full detail: `orchestration-api.md` §11.2 (and `mobile.md` §7 for the SDK view).
 
 ## After a duplicate-fulfilment incident (replay storm recovery)
 

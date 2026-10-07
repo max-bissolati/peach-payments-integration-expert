@@ -90,6 +90,11 @@ Body is `{"payouts":[ … ]}` (array → batch submission). Item fields:
 | Finbond (EPE/Mutual) | `589000` | | TymeBank | `678910` |
 | | | | Ubank | `431010` |
 
+**Bank Zero - Mukuru** now has universal branch code `435000`; this is distinct from the existing
+Mukuru-via-Access route (`410506`). Select the beneficiary's actual bank and confirm the current
+API enum rather than mapping all Mukuru accounts to Access.
+[Supported banks, checked 2026-10-07](https://developer.peachpayments.com/docs/peach-payouts#supported-banks).
+
 ### Payout states
 `pending → processing → successful | failed | cancelled | reversed`. A failed payout returns value to your float (fees still apply).
 
@@ -101,7 +106,14 @@ Body is `{"payouts":[ … ]}` (array → batch submission). Item fields:
 - Payout-code groups (4-digit first group): `001` technical, `002` processing, `003` invalid input, `004` request, `005` security; success `2000.000.000`; processing `2900.000.003`; bank-side "no account" `2001.002.106`.
 
 ## List / query
-- `GET /merchants/{merchantId}/payouts` — list payout requests with date/status filters; window strictly **< 3 months** between start/end dates. Query a single payout (`querypayoutrequest`) by `payoutId` for its current state, `resultCode`, and `missingCreditQueryStatus` (flags payouts the bank couldn't auto-confirm).
+- `GET /merchants/{merchantId}/payouts`: list requests with date/status filters; window strictly **< 3 months**.
+- `GET /merchants/{merchantId}/payouts/{payoutRequestId}/status`: query by the provider's request ID.
+- `GET /merchants/{merchantId}/payouts/status?payoutId={payoutId}`: query using your merchant-supplied
+  UUID, useful after create times out without returning `payoutRequestId`. A 200 means the payout was
+  stored. An initial 404 means it is not visible yet: wait and query again, not immediate resubmission.
+  The docs permit creating again only if it stays 404, but do not define that wait duration; use a
+  bounded recovery policy and escalate uncertainty before a fresh payout. Source checked 2026-10-07:
+  [query by payout ID](https://developer.peachpayments.com/reference/querypayoutrequestbypayoutid).
 - `GET /merchants/{merchantId}/balance` — available float, in cents.
 
 ## BANV — bank account verification
@@ -159,6 +171,16 @@ POST /merchants/{merchantId}/banv
 ## Sandbox testing
 Test accounts: Absa `4047594620` / branch `632005`; TymeBank `51000347387` / `678910`. BANV no-match: Nedbank `1012546144`. Sandbox payouts may fail intermittently outside South African office hours. Full data in `testing-and-go-live.md`.
 
+## Dashboard bulk files use rands
+
+Unlike API `amount` in cents, `payout_template.xlsx` amounts are in major units (rands). Keep all
+columns, including optional ones; leave cells blank rather than removing columns. Maximum file size
+is 1 MB, with no documented row-count or total-value limit. Per-payout limits remain R10 to
+R5,000,000, with lower limits outside business hours. Validate in the sandbox Dashboard first.
+For an upload with errors, valid rows are processed. Correct and re-upload only the rejected error
+rows, never the original full batch. Confirm each payout's actual status for reconciliation.
+[Dashboard guide, checked 2026-10-07](https://developer.peachpayments.com/docs/payouts-dashboard).
+
 ## Traps
 
 - **No mid-batch stop or recall**: payouts are irreversible by design and there is no documented
@@ -166,7 +188,7 @@ Test accounts: Absa `4047594620` / branch `632005`; TymeBank `51000347387` / `67
   abort). Screen beneficiaries — BANV plus your own sanctions/verification — BEFORE submission;
   after submission, per-item status queries are your only visibility.
 - `amount` sent in rands ("150.00") instead of cents (`15000`) → pays R1.50 or fails validation; the field is an integer **cents** value, min 1000, max 500000000.
-- Using the recipient's real branch code instead of the universal one → rejected or misrouted; always the universal code from the table (and alias banks need the alias bank's code: RMB→FNB `250655`, Mercantile→Capitec Business `450105`, Mukuru→Access `410506`, Sasfin→Bidvest Alliances `683000`).
+- Using the recipient's real branch code instead of the universal one → rejected or misrouted; always the universal code from the table (and alias banks need the alias bank's code: RMB→FNB `250655`, Mercantile→Capitec Business `450105`, Mukuru via Access→`410506`, Bank Zero - Mukuru→`435000`, Sasfin→Bidvest Alliances `683000`).
 - Adding columns or renaming headers in the bulk XLSX → upload errors; use the template verbatim.
 - Only successful payouts have proofs; expect them from ~30 minutes after completion onward.
 - List window ≥3 months → empty/error; page in <3-month chunks.

@@ -1,5 +1,14 @@
 # Checkout V2 — the core integration
 
+
+**Routing update, verified 2026-10-07:** Peach now recommends Orchestration for new custom online
+integrations. Existing classic Checkout/Payments API integrations remain documented; do not relabel
+that guidance as an announced shutdown or force a migration during unrelated maintenance.
+Read `sdk-web.md` and `orchestration-api.md` for new builds. Sources:
+[product portfolio](https://developer.peachpayments.com/docs/product-portfolio-overview),
+[Checkout overview](https://developer.peachpayments.com/docs/checkout-overview),
+[Payments API overview](https://developer.peachpayments.com/docs/payments-api-overview).
+
 ## When to load
 
 Building payments into a custom web app with Peach Checkout (Embedded widget, Hosted redirect, or
