@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" viewBox="0 0 1200 300" role="img" aria-label="Peach Payments Integration Expert. A correct Peach integration on the first try, for any AI coding agent.">
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" viewBox="0 0 1200 300" role="img" aria-label="Peach Payments Integration Expert. Product-specific guidance for online and in-store payments.">
   <defs>
     <linearGradient id="peach" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#FFC59E"/>
@@ -12,7 +12,7 @@
   <rect width="1200" height="300" rx="16" fill="url(#bg)"/>
   <rect x="0" y="0" width="8" height="300" fill="url(#peach)"/>
   <text x="64" y="118" font-family="'Segoe UI', Helvetica, Arial, sans-serif" font-size="50" font-weight="800" fill="#e6edf3">Peach Payments <tspan fill="url(#peach)">Integration Expert</tspan></text>
-  <text x="66" y="162" font-family="'Segoe UI', Helvetica, Arial, sans-serif" font-size="22" fill="#8b949e">A correct Peach integration on the first try, for any AI coding agent.</text>
-  <text x="66" y="230" font-family="ui-monospace, 'SFMono-Regular', Menlo, monospace" font-size="16" fill="#768390">Checkout V2  ·  Orchestration  ·  Payment Links  ·  Payouts  ·  Recurring  ·  12 platform extensions</text>
-  <text x="66" y="260" font-family="ui-monospace, 'SFMono-Regular', Menlo, monospace" font-size="13.5" fill="#545c66">discovery  →  plugin-first routing  →  verified money-movement patterns  →  go-live gate</text>
+  <text x="66" y="162" font-family="'Segoe UI', Helvetica, Arial, sans-serif" font-size="22" fill="#8b949e">Product-specific guidance for online and in-store payments.</text>
+  <text x="66" y="230" font-family="ui-monospace, 'SFMono-Regular', Menlo, monospace" font-size="16" fill="#768390">Orchestration  ·  POS / Expo / SUNMI  ·  Network tokens  ·  Checkout  ·  Payouts</text>
+  <text x="66" y="260" font-family="ui-monospace, 'SFMono-Regular', Menlo, monospace" font-size="13.5" fill="#545c66">discovery  →  product selection  →  implementation  →  recovery  →  verification</text>
 </svg>
