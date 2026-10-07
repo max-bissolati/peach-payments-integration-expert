@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-07, v0.8.0 publication correction
+
+- Restored the custom README banner, status badges and collapsible freshness section while keeping
+  current product guidance. Updated the banner for POS, Orchestration and network tokens.
+- Aligned GitHub release publication with `VERSION`; README now links to the latest release.
+
 ## 2026-10-07, v0.8.0
 
 - Added a dedicated network-tokenisation guide separating vault IDs, scheme tokens and wallet

@@ -2,6 +2,9 @@
 
 ## What's next
 
+For each future version bump, publish the matching GitHub release and inspect the rendered README
+so release metadata and visual presentation stay aligned (`README.md`, `VERSION`).
+
 Validate the selected product in a real implementation. For new online work, use
 `references/playbooks/orchestration-build.md`; for network tokens, confirm the connector/TSP
 arrangement and run `references/network-tokenisation.md` acceptance cases. Documentation review

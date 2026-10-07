@@ -1,11 +1,15 @@
 <div align="center">
 
-<h1>Peach Payments Integration Expert</h1>
+<img src="assets/readme/hero.svg" width="100%" alt="Peach Payments Integration Expert. Product-specific guidance for online and in-store payments." />
 
 <p>
 <img src="https://img.shields.io/badge/skill-v0.8.0-3fb950?style=flat-square" alt="skill v0.8.0" />
+<img src="https://img.shields.io/badge/selftests-210%20passing-3fb950?style=flat-square" alt="210 regression tests passing" />
+<img src="https://img.shields.io/badge/doctor-HEALTHY-3fb950?style=flat-square" alt="doctor HEALTHY" />
 <img src="https://img.shields.io/badge/format-SKILL.md-000000?style=flat-square" alt="SKILL.md agent skill" />
 <img src="https://img.shields.io/badge/runtime-Node%2018%2B%20%7C%20Python%203-8957e5?style=flat-square" alt="Node 18+ and Python 3" />
+<img src="https://img.shields.io/badge/scripts-zero%20package%20dependencies-8957e5?style=flat-square" alt="zero package dependencies" />
+<img src="https://img.shields.io/badge/PSP-Peach%20Payments-ff6f00?style=flat-square" alt="Peach Payments" />
 </p>
 
 </div>
@@ -105,7 +109,8 @@ retry logic. POS/Expo guidance has undergone source review and scenario evaluati
 been tested on physical terminals. New tokenisation guidance is documentation-reviewed, not a
 claim of token provisioning or acquirer certification.
 
-## Keeping sources current
+<details>
+<summary><b>Keeping sources current</b></summary>
 
 The historical source baseline is September 2026, with dated updates recorded in
 [versions and provenance](references/versions.md). Each tracked source has its own hash and
@@ -127,8 +132,22 @@ bash scripts/refresh-docs-check.sh --accept URL --from-file FILE \
 Normal checks never advance a baseline. Run `--help` for bounds and arguments.
 [BACKLOG.md](BACKLOG.md) records remaining hardware checks and public documentation gaps.
 
+</details>
+
+## Repository layout
+
+```text
+SKILL.md              task router and integration principles
+references/           product guides, platform plugins and build playbooks
+scripts/              integration checks, health checks and documentation freshness
+reference-data/       machine-readable hosts, methods and result-code families
+examples/             classic Checkout V2 examples for Express, Next.js, Flask and PHP
+templates/            environment-variable templates
+```
+
 ## Version and provenance
 
+The latest published version is available in [GitHub Releases](https://github.com/max-bissolati/peach-payments-integration-expert/releases/latest).
 The release version is recorded in [VERSION](VERSION). Detailed changes are in
 [CHANGELOG.md](CHANGELOG.md); claim-level provenance and verification limits are in
 [references/versions.md](references/versions.md).
